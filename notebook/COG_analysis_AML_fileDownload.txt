@@ -1,0 +1,15 @@
+#python install 
+cd kf_python_api conda create --prefix ./conda_env 
+conda activate ./conda_env 
+conda install -c conda-forge -c bioconda python=3 
+pip install git+https://github.com/kids-first/kf-cavatica-python-tools.git 
+git clone https://github.com/kids-first/kf-cavatica-python-tools.git
+
+#download files 
+cd kf_python_api 
+
+conda activate ./conda_env 
+
+python ./kf-cavatica-python-tools/recipes/download_files.py --project_name COG_analysis --project_path kallisto_output --download_location /mnt/isilon/xing_lab/aspera/adamsj/kf_AML_kallisto_output
+
+/mnt/isilon/xing_lab/aspera/adamsj/kf_python_api
