@@ -6,6 +6,8 @@ Log into the cavatica website and click: Developer -> Authentication token
 
 Put the file at ~/.sevenbridges/credentials
 
+📝 *Make sure this directory is in /home/adamsj8 (or other folder, not in a shared filesystem).* 
+
 It should have these 3 lines:
 
 [default]
