@@ -40,9 +40,13 @@ Run these commands
 
 cd {the_directory_from_the_install}
 
+``` cd /mnt/isilon/xing_lab/aspera/adamsj/kf_python_api ```
+
 conda activate ./conda_env
 
 python ./kf-cavatica-python-tools/recipes/download_files.py --project_name {your_project_name} --project_path {rel_path/within/project} --download_location {path/to/store/downloaded/files}
+
+``` python ./kf-cavatica-python-tools/recipes/download_files.py --project_name rmats_app_dev_JA --project_path bam_files --download_location /mnt/isilon/xing_lab/aspera/adamsj/kfAML_BAMs  ```
 
 # More API info
 
