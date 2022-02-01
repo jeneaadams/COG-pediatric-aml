@@ -27,10 +27,12 @@ Workflows for processing RNA data for germline short variant discovery with GATK
 ### PLINK to convert .VCF --> .BED files 
 ```plink —vcf [filename] —double-id —make-bed —out [output filename]```
 
-- [BED file documentation](https://zzz.bwh.harvard.edu/plink/binary.shtml)
+[BED file documentation](https://zzz.bwh.harvard.edu/plink/binary.shtml)
+
 
 ### ADMIXTURE
 [ADMIXTURE manual](https://dalexander.github.io/admixture/admixture-manual.pdf) 
+
 
 #### input command with files: 
 ```admixture [BED_FILE.bed] [K] ```
