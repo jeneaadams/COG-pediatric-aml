@@ -30,7 +30,7 @@ Workflows for processing RNA data for germline short variant discovery with GATK
 [BED file documentation](https://zzz.bwh.harvard.edu/plink/binary.shtml)
 
 
-### ADMIXTURE
+### 3a. ADMIXTURE
 [ADMIXTURE manual](https://dalexander.github.io/admixture/admixture-manual.pdf) 
 
 
@@ -54,7 +54,15 @@ There is an output file for each parameter set: Q (the ancestry fractions), and 
 
 
 
-### PCA 
-#### EIGENSTRAT
+### 3b. PCA 
+#### [EIGENSTRAT --> EIGENSOFT](https://github.com/DReichLab/EIG)
+
+Software [download](https://alkesgroup.broadinstitute.org/EIGENSOFT/) 
+
+The EIGENSOFT package combines functionality from our population genetics methods (Patterson et al. 2006) and our EIGENSTRAT stratification correction method (Price et al. 2006). The EIGENSTRAT method uses principal components analysis to explicitly model ancestry differences between cases and controls along continuous axes of variation; the resulting correction is specific to a candidate marker’s variation in frequency across ancestral populations, minimizing spurious associations while maximizing power to detect true associations. The EIGENSOFT package has a built-in plotting script and supports multiple file formats and quantitative phenotypes.
+* The latest EIGENSOFT(EIG) version is available [here](here) and on [the Alkes Price lab website](http://www.hsph.harvard.edu/alkes-price/software/).
+**The EIGENSOFT FAQ is available [here](http://www.hsph.harvard.edu/alkes-price/eigensoft-frequently-asked-questions/). 
+
+
 
 
