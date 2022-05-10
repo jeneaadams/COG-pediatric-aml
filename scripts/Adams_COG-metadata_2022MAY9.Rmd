@@ -1,0 +1,830 @@
+---
+title: "COG Metadata Visualixation - race, age, gender"
+author: "Jenea Adams"
+date: "APR 2022"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r}
+# install.packages("gt", dependencies = T)
+# remotes::install_github("ianmoran11/mmtable2")
+
+# install.packages("dplyr", dependencies = T)
+
+# install.packages("tidyverse")
+
+library(dplyr)
+library(readr)
+library(tidyverse)
+# library(mmtable2)
+library(ggplot2)
+
+# library(dplyr)
+```
+
+
+```{r}
+setwd("~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/original-metadata-files")
+
+pat.met = read.csv("patient-met.csv", header = T)
+wgs = read.csv("WGS.csv", header = T)
+rna = read.csv("RNA.csv", header = T)
+regno = read.csv("regno-to-caseID.csv", header = T)
+```
+
+
+
+```{r}
+length(intersect(wgs$case_id, rna$case_id))
+
+wgs.rna = 390
+```
+
+
+
+```{r}
+
+
+
+rna_norm = filter(rna, sample_type == "Normal")
+
+rna_tum = filter(rna, sample_type == "Tumor")
+
+head(rna_tum)
+
+length(Reduce(intersect, list(wgs$case_id, rna_tum$case_id, regno$usi)))
+
+
+```
+
+
+rna-seq tumor x patient metadata
+```{r}
+length(intersect(rna_tum$case_id, regno$usi))
+```
+
+
+```{r}
+# rna.tum.pat.met = filter(!wgs$case_id %in% wgs & !rna_norm$case_id %in% rna_norm & rna_tum$case_id & regno$usi)
+```
+
+```{r}
+# rna.tum.pat.met = filter(rna, !wgs$case_id %in% c(rna_tum$case_id) & rna_tum$case_id %in% regno$usi )
+```
+
+```{r}
+x = filter(rna, rna$case_id %in% wgs$case_id)
+
+nrow(x)
+```
+
+
+```{r}
+x1 = filter(rna, rna$case_id %in% wgs$case_id & !wgs$case_id %in% regno$usi)
+
+nrow(x1)
+```
+
+
+row 1: wgs x rna_tum x regno
+```{r}
+x2 = filter(rna_tum, rna_tum$case_id %in% wgs$case_id & rna_tum$case_id %in% regno$usi & !rna_tum %in% rna_norm)
+
+nrow(x2)
+
+```
+
+
+row 2: !wgs x !rna_norm x rna_tum x pat.met
+```{r}
+
+x3 = filter(rna_tum, !rna_tum$case_id %in%wgs$case_id & !rna_tum$case_id %in% rna_norm$case_id & rna_tum$case_id %in% regno$usi)
+
+
+nrow(x3)
+```
+
+
+
+row 3: wgs x !rna_norm x rna_tum x !pat.met
+```{r}
+x4 = filter(rna_tum, rna_tum$case_id %in%wgs$case_id & !rna_tum$case_id %in% rna_norm$case_id & !rna_tum$case_id %in% regno$usi)
+
+nrow(x4)
+
+```
+
+
+row 4: wgs x !rna_normal x !rna_tum x pat.met
+```{r}
+x5 = filter(wgs, !wgs$case_id %in% rna_norm$case_id & !wgs$case_id %in% rna_tum$case_id & wgs$case_id %in% regno$usi)
+            
+
+nrow(x5)
+```
+
+
+row 5: wgs x !rna_normal x !rna_tum x !pat.met
+
+```{r}
+x6 = filter(wgs, !wgs$case_id %in% rna_norm$case_id & !wgs$case_id %in% rna_tum$case_id & !wgs$case_id %in% regno$usi)
+            
+
+nrow(x6)
+```
+
+
+row 6: !wgs x rna_norm x !rna_tum x !pat.met
+```{r}
+# x7 = filter(rna_, !rna_norm$case_id %in%wgs$case_id & !rna_norm$case_id %in% rna_tum$case_id & !rna_tum$case_id %in% regno$usi)
+# 
+# nrow(x7)
+```
+
+row 7:  !wgs x !rna_norm x rna_tum x !pat.met
+```{r}
+x8 = filter(rna_tum, !rna_tum$case_id %in%wgs$case_id & !rna_tum$case_id %in% rna_norm$case_id & !rna_tum$case_id %in% regno$usi)
+
+nrow(x8)
+
+```
+
+```{r}
+# pat.met = pat_met
+```
+
+```{r}
+x9 = filter(pat.met, pat.met$Patient.registration.number %in% regno$regno)
+
+
+length(intersect(regno$regno, pat.met$Patient.registration.number))
+
+nrow(x9)
+```
+ 
+ 
+
+# cross-checking usi and sequencing data 
+
+## filtering out NAs for case_id
+```{r}
+regno.caseID = regno
+colnames(regno.caseID)[3] = "case_id"
+
+regno.caseID_noNA = filter(regno.caseID, !case_id == "NA")
+
+nrow(regno.caseID_noNA)
+```
+
+
+```{r}
+colnames(pat.met)[1] = "regno"
+```
+
+
+## merging tables based on case_id
+```{r}
+
+
+regno.caseID_pat.met = merge(regno.caseID_noNA, pat.met, by ="regno")
+
+```
+ 
+This gives the number of people patient metadata and registration numbers, but sill not merged with cavatica data yet 
+ 
+
+I will change regno.caseID_pat.met to merged.pat.met
+ 
+```{r}
+merged.pat.met = regno.caseID_pat.met
+```
+ 
+ 
+First, I'd like to see how many people with WGS data also have RNAseq data --> 390 people 
+```{r}
+x11 = filter(rna, rna$case_id %in% wgs$case_id)
+nrow(x11)
+```
+
+
+visa versa? --> 390
+```{r}
+x12 = filter(wgs, wgs$case_id %in% rna$case_id)
+nrow(x12)
+```
+
+
+
+Now I'd like to capture people with WGS AND patient metadata --> 269
+```{r}
+wgs.pat.met = filter(wgs, wgs$case_id %in% merged.pat.met$case_id)
+nrow(wgs.pat.met)
+
+```
+
+
+I'll do the same for RNA-seq data --> 470 
+```{r}
+rna.pat.met = filter(rna, rna$case_id %in% merged.pat.met$case_id)
+nrow(rna.pat.met)
+```
+
+
+How many patients have RNA-seq, WGS, AND patient metadata? 
+```{r}
+
+rna.wgs = filter(rna, rna$case_id %in% wgs$case_id) #390
+
+rna.wgs.pat.met = merge( rna.wgs, merged.pat.met, by = "case_id") #259 
+
+nrow(rna.wgs.pat.met)
+```
+
+How many patients have metadata and EITHER WGS or RNA data?
+```{r}
+rna.or.wgs.patmet = filter(merged.pat.met, merged.pat.met$case_id %in% rna$case_id | merged.pat.met$case_id %in% wgs$case_id)
+nrow(rna.or.wgs.patmet)
+```
+
+
+rna.or.wgs.patmet now becomes cavatica.aaml to demonstrate a merged dataset of cavatica with patient metadata
+```{r}
+cavatica.aaml = rna.or.wgs.patmet
+```
+
+
+# defining variables 
+```{r}
+race = cavatica.aaml$Race.category
+
+age = cavatica.aaml$Age.at.dx..years.
+
+wbc = cavatica.aaml$WBC..x10.3.MicroLiter..levels
+```
+
+ 
+# Race 
+Race.category
+```{r}
+table(cavatica.aaml$Race.category)
+
+race.table = data.frame(table(cavatica.aaml$Race.category))
+
+pie(race.table$Freq, labels = race.table$Var1, main = "pie chart of Race Categories")
+
+
+```
+
+```{r}
+colnames(race.table)[1] = "Race.Category"
+colnames(race.table)[2] = "Count"
+
+race.table$fraction = round(race.table$Count/sum(race.table$Count), 3)
+
+race.table$ymax = cumsum(race.table$fraction)
+
+race.table$ymin = c(0, head(race.table$ymax, n=-1))
+
+race_donut_plot = ggplot(race.table, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=Race.Category)) +
+     geom_rect() +
+     coord_polar(theta="y") + # Try to remove that to understand how the chart is built initially
+      xlim(c(2, 4)) + theme_void()
+
+
+
+race_donut_plot
+
+```
+
+
+```{r}
+# #compute a label position
+# race.table$labelPosition <- (race.table$ymax + race.table$ymin) / 2
+# 
+# Compute a good label
+race.table$label <- paste0(race.table$Race.Category, "\n value: ", race.table$Count)
+
+
+# colnames(race.table)[1] = "Race.Category"
+
+race_donut_plot2 = ggplot(race.table, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=Race.Category)) +
+  geom_rect() + 
+  # geom_text( x=2, aes(y=labelPosition, label=label, color=Var1), size=6) +
+  coord_polar(theta="y") + 
+  xlim(c(0, 4)) + 
+  theme(legend.position = "none")+
+  theme_void() 
+
+
+
+race_donut_plot2
+```
+
+```{r}
+
+
+# colnames(race.table)[2] = "Count"
+
+
+race_donut_plot3 = ggplot(race.table, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=Race.Category)) +
+  geom_rect() + 
+  geom_label(aes(label = Count, x = 3.5, y = (ymin+ymax)/2), inherit.aes = T, show.legend = F) +
+  coord_polar(theta="y") + 
+  xlim(c(0, 4)) + 
+  theme(legend.position = "none")+
+  theme_void() 
+
+race_donut_plot3
+
+
+```
+
+
+
+# Age
+
+Age at diagnosis in years 
+```{r}
+hist(cavatica.aaml$Age.at.dx..years., breaks = 100, main = "Age at Diagnosis", col = heat.colors(50), xlim = c(0,30), 
+     xlab = "Age in years", ylab = "Patient frequency")
+
+```
+
+
+
+# WBC
+
+```{r}
+plot(age, wbc)
+```
+
+
+```{r}
+plot(wbc, age)
+
+# library(dplyr)
+wbc = as.double(wbc)
+
+library(dplyr)
+
+
+# outlier = filter(wbc, wbc > 1500)
+```
+
+
+```{r}
+# wbc.plot.race = ggplot(wbc, aes(x = WBC))
+```
+
+
+
+## PCA plot of WBC
+
+```{r}
+
+
+wbc.race.age = data.frame(wbc, race, age)
+```
+
+
+
+```{r}
+library(ggfortify)
+```
+
+```{r}
+pca_wbc.race.age = prcomp(wbc.race.age[,c(1,3)], scale =T )
+str(pca_wbc.race.age)
+```
+
+```{r}
+autoplot(pca_wbc.race.age)
+```
+
+```{r}
+autoplot(pca_wbc.race.age, data = wbc.race.age, colour = "race")
+```
+
+removing the outlier 
+```{r}
+pca_wbc.race.age2 = prcomp(filter(wbc.race.age[,c(1,3)], wbc < 1000), scale =T )
+```
+
+```{r}
+summary(wbc)
+```
+
+```{r}
+autoplot(pca_wbc.race.age2, data = filter(wbc.race.age, wbc < 1000), colour = "race", alpha = 0.5, loadings.label = TRUE)
+```
+
+
+# Race and Risk Group 
+```{r}
+risk= cavatica.aaml$Risk.group.classification
+
+race.risk = table(risk, race)
+
+race.risk = race.risk[-1,]
+```
+
+Creating a mosaic plot
+```{r}
+race.risk_mosaic = mosaicplot(race.risk, xlab = "Risk Classification", ylab = "Race Category", 
+                              main = "Risk group classification by race", 
+                              col = colorspace::qualitative_hcl(7), 
+                              clegend = T, las = 1)
+```
+
+```{r}
+library(vcd)
+
+labs <- round(prop.table(race.risk), 2)
+
+
+race.risk_mosaic = mosaicplot(race.risk, xlab = "Risk Classification", ylab = "Race Category", 
+                              main = "Risk group classification by race", 
+                              col = colorspace::qualitative_hcl(7), 
+                              clegend = T, las = 1)
+```
+
+
+```{r}
+colnames(race.risk)
+
+race.risk_noUN = race.risk[,-4]
+```
+
+```{r}
+race.risk_noUN_mosaic = mosaicplot(race.risk_noUN, xlab = "Risk Classification", ylab = "Race Category", 
+                              main = "Risk group classification by race", 
+                              col = colorspace::qualitative_hcl(7), 
+                              clegend = T, las = 1)
+
+```
+
+
+
+# Death
+```{r}
+# cavatica.aaml
+```
+```{r}
+filter(cavatica.aaml, !cavatica.aaml$Date.of.death == ".")
+```
+
+```{r}
+# library(ggplot2)
+# library(scales)
+# library(lubridate)
+```
+```{r}
+
+
+# library(vistime)
+# 
+# gg_vistime()
+```
+
+
+
+# Race Categories and outcomes
+
+I will do a linear regression to determine if there's a relationship between the race categories and risk and disease outcomes 
+
+```{r}
+
+colnames(cavatica.aaml)
+
+```
+
+Creating indicator variables for the race categories 
+
+```{r}
+library(fastDummies)
+
+
+cavatica.aaml.ind = dummy_cols(cavatica.aaml, select_columns = "Race.category")
+
+cavatica.aaml.ind = dummy_cols(cavatica.aaml.ind, select_columns = "Risk.group.classification")
+
+colnames(cavatica.aaml.ind)
+
+```
+
+
+```{r}
+high.risk.ind = cavatica.aaml.ind$`Risk.group.classification_High risk`
+
+aian.ind = cavatica.aaml.ind$`Race.category_American Indian or Alaska Native`
+asian.ind = cavatica.aaml.ind$Race.category_Asian
+black.ind = cavatica.aaml.ind$`Race.category_Black or African American`
+race_unkown.ind = cavatica.aaml.ind$Race.category_Unknown
+white.ind = cavatica.aaml.ind$Race.category_White
+
+
+race.risk.fit = lm(high.risk.ind ~ aian.ind + asian.ind + black.ind + race_unkown.ind + white.ind, data = cavatica.aaml)
+```
+
+```{r}
+race.risk.fit0 = lm(high.risk.ind ~ black.ind + white.ind + asian.ind + aian.ind, data = cavatica.aaml.ind)
+
+summary(race.risk.fit0)
+```
+
+
+```{r}
+anova(race.risk.fit0)
+```
+
+
+```{r}
+summary(race.risk.fit0)
+```
+
+```{r}
+anova(race.risk.fit0)
+
+```
+
+
+
+Now I'd like to use the dates of first relapse feature 
+```{r}
+cavatica.aaml.relapse = filter(cavatica.aaml, !Date.of.first.relapse == ".")
+
+# length(cavatica.aaml.relapse$Date.of.first.relapse)
+# 
+# race.relapse.table = table(cavatica.aaml.relapse %>% select(Date.of.first.relapse, Race.category))
+# 
+# x = as.data.frame(race.relapse.table)
+# 
+# colnames(x)
+```
+
+
+```{r}
+# colnames(race.relapse.table)
+```
+
+
+Visualizing race category distribution fo the relapse dates 
+```{r}
+# race.relapse.donut_plot1 = ggplot(race.relapse.table, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=Race.Category)) +
+#   geom_rect() + 
+#   geom_label(aes(label = Count, x = 3.5, y = (ymin+ymax)/2), inherit.aes = T, show.legend = F) +
+#   coord_polar(theta="y") + 
+#   xlim(c(0, 4)) + 
+#   theme(legend.position = "none")+
+#   theme_void() 
+# 
+# race_donut_plot1
+```
+
+```{r}
+class(cavatica.aaml.relapse$Date.of.first.relapse)
+
+# cavatica.aaml.relapse$WBC..x10.3.MicroLiter..levels
+
+library(linelist)
+
+cavatica.aaml.relapse$Date.of.first.relapse = guess_dates(cavatica.aaml.relapse$Date.of.first.relapse)
+
+class(cavatica.aaml.relapse$Date.of.first.relapse) # now all dates are of the date class 
+```
+
+```{r}
+ggplot(data = cavatica.aaml.relapse, aes(x = Date.of.first.relapse, y = Risk.group.classification , color = Race.category)) +
+  geom_point(alpha = 0.3) +
+  labs(x = "Date",
+    y = "method of payment",
+    title = "Y x Relapse",
+    subtitle = "today")
+```
+
+```{r}
+ggplot(data = filter(cavatica.aaml.relapse, !Race.category == "White"), aes(x = Date.of.first.relapse, y = Risk.group.classification , color = Race.category)) +
+  geom_point(alpha = 0.3) +
+  labs(x = "Date",
+    y = "Risk category",
+    title = "Y x Relapse",
+    subtitle = "today")
+```
+
+```{r}
+nrow(filter(cavatica.aaml.relapse, Date.of.first.relapse < as.Date("2014-01-01") & Race.category =="Black or African American"))
+```
+
+```{r}
+nrow(filter(cavatica.aaml.relapse, Date.of.first.relapse < as.Date("2014-01-01") & Race.category =="Asian"))
+```
+
+```{r}
+nrow(filter(cavatica.aaml.relapse, Date.of.first.relapse < as.Date("2014-01-01") & Race.category =="Black or African American" & Risk.group.classification == "High risk") )
+```
+
+```{r}
+library(ggplot2)
+library(scales)
+library(lubridate)
+library(vistime)
+```
+
+```{r}
+colnames(cavatica.aaml.relapse)
+```
+
+
+```{r}
+cavatica.aaml.relapse$Date.of.enrollment = guess_dates(cavatica.aaml.relapse$Date.of.enrollment)
+
+cavatica.aaml.relapse$Date.of.enrollment
+```
+
+```{r}
+# vistime(cavatica.aaml.relapse, col.start = as.character(cavatica.aaml.relapse$Date.of.enrollment), col.end = as.character(Date.of.first.relapse), col.group = Race.category, col.color = race_colors)
+```
+
+```{r}
+hist(cavatica.aaml.relapse$Date.of.first.relapse, breaks = 50)
+```
+
+```{r}
+# cavatica.aaml.relapse$Date.of.death = guess_dates(cavatica.aaml.relapse$Date.of.death)
+
+# cavatica.aaml.relapse = cavatica.aaml.relapse %>% filter(!Date.of.death == ".") 
+
+
+
+ggplot(cavatica.aaml.relapse, aes(x = Date.of.first.relapse , y = Date.of.death, color = Race.category)) + geom_point(alpha = 0.4)
+```
+
+```{r}
+cavatica.aaml.relapse$diffEnrollRelapse = difftime(cavatica.aaml.relapse$Date.of.first.relapse, cavatica.aaml.relapse$Date.of.enrollment, units = "weeks")
+# cavatica.aaml$diffEnrollRelapse = difftime(cavatica.aaml$Date.of.first.relapse, cavatica.aaml$Date.of.enrollment, units = "weeks")
+
+```
+
+
+Mean time to relapse for different race groups after enrollment 
+```{r}
+
+class(cavatica.aaml.relapse$diffEnrollRelapse) = "numeric"
+# lapply(race.df.list, function(x){mean(x$diffEnrollRelapse)})
+
+black.relapse = filter(cavatica.aaml.relapse, Race.category == "Black or African American")
+class(black.relapse$diffEnrollRelapse) = "numeric"
+
+
+white.relapse = filter(cavatica.aaml.relapse, Race.category == "White")
+class(white.relapse$diffEnrollRelapse) = "numeric"
+
+
+asian.relapse = filter(cavatica.aaml.relapse, Race.category == "Asian")
+class(asian.relapse$diffEnrollRelapse) = "numeric"
+
+
+aian.relapse = filter(cavatica.aaml.relapse, Race.category == "American Indian or Alaska Native")
+class(aian.relapse$diffEnrollRelapse) = "numeric"
+
+
+race.df.list.relapse = list(black.relapse, white.relapse, asian.relapse, aian.relapse)
+
+
+lapply(race.df.list.relapse, function(x){mean(x$diffEnrollRelapse)})
+
+
+
+```
+
+
+Running a t-test on the difference in time to first relapse by race category 
+```{r}
+t.test(black.relapse$diffEnrollRelapse, white.relapse$diffEnrollRelapse, paired = F)
+
+```
+
+Trying a Mann-Whitney U test 
+```{r}
+# wilcox.test(black.relapse$diffEnrollRelapse ~ white.relapse$diffEnrollRelapse)
+```
+Didn't work 
+
+
+
+Now trying two-sample komlogorov-Smirnov test
+```{r}
+ks.test(black.relapse$diffEnrollRelapse, white.relapse$diffEnrollRelapse)
+
+
+```
+```{r}
+?ks.test()
+```
+
+
+
+Visualizing data from date of enrollment to first relapse 
+```{r}
+
+# ggplot(cavatica.aaml.relapse, aes(x = , y = diffEnrollRelapse)) + 
+#   geom_bar(stat = 'identity') + 
+#   coord_flip()
+
+```
+
+```{r}
+summary(cavatica.aaml.relapse$diffEnrollRelapse)
+```
+
+
+
+# t-test on Race categories and WBC count
+
+```{r}
+head(cavatica.aaml)
+
+black = filter(cavatica.aaml, Race.category == "Black or African American")
+black = filter(black, !WBC..x10.3.MicroLiter..levels ==".")
+class(black$WBC..x10.3.MicroLiter..levels) = "numeric"
+
+
+white = filter(cavatica.aaml, Race.category == "White")
+white = filter(white, !WBC..x10.3.MicroLiter..levels ==".")
+class(white$WBC..x10.3.MicroLiter..levels) = "numeric"
+
+
+asian = filter(cavatica.aaml, Race.category == "Asian")
+asian = filter(asian, !WBC..x10.3.MicroLiter..levels ==".")
+class(asian$WBC..x10.3.MicroLiter..levels) = "numeric"
+
+
+aian = filter(cavatica.aaml, Race.category == "American Indian or Alaska Native")
+aian = filter(aian, !WBC..x10.3.MicroLiter..levels ==".")
+class(aian$WBC..x10.3.MicroLiter..levels) = "numeric"
+
+
+
+race.df.list = list(black, white, asian, aian)
+
+
+class(aian$WBC..x10.3.MicroLiter..levels)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+
+# mean(black$WBC..x10.3.MicroLiter..levels)
+# mean(white$WBC..x10.3.MicroLiter..levels)
+
+lapply(race.df.list, function(x){mean(x$WBC..x10.3.MicroLiter..levels)})
+
+
+# hist(black$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "Black patient WBC Counts", xlim = c(0, 400))
+# hist(white$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "White patient WBC Counts", xlim = c(0, 400))
+# hist(asian$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "Asian patient WBC Counts", xlim = c(0, 400))
+# hist(aian$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "AIAN patient WBC Counts", xlim = c(0, 400))
+
+
+hist(black$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "Black patient WBC Counts")
+hist(white$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "White patient WBC Counts")
+hist(asian$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "Asian patient WBC Counts")
+hist(aian$WBC..x10.3.MicroLiter..levels, breaks = 50, main = "AIAN patient WBC Counts")
+```
+
+```{r}
+print("Black patients")
+summary(black$WBC..x10.3.MicroLiter..levels)
+
+print(" ")
+print("White patients ")
+summary(white$WBC..x10.3.MicroLiter..levels)
+```
+
+
+
+Proceeding with caution on the t-test because the samples are not normally distributed for these categories 
+
+Will use a welch test because the two populations (Black vs White) have very unequal sample sizes 
+```{r}
+t.test(black$WBC..x10.3.MicroLiter..levels, white$WBC..x10.3.MicroLiter..levels, paired = F)
+
+```
+
+
+```{r}
+t.test(black$WBC..x10.3.MicroLiter..levels, white$WBC..x10.3.MicroLiter..levels, paired = F)
+
+```
+
+```{r}
+```
+
