@@ -1,0 +1,76 @@
+---
+title: "KM plots"
+author: "Jenea Adams"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r}
+# install.packages("survival")
+# install.packages("survminer")
+
+library(survival)
+library(survminer)
+```
+
+Load in data 
+```{r}
+time = c(4, 6, 8, 11, 15, 15, 20, 20, 25, 31)
+status = c(1, 1, 0, 1, 1, 1, 1, 0, 1, 0)
+sex = c(1, 1, 1, 2, 1, 1, 2, 2, 2, 2)
+df = data.frame(time, status, sex)
+```
+
+Table and Curves using log 
+```{r}
+fit = survfit(Surv(time, status) ~1)
+summary(fit)
+```
+
+```{r}
+ggsurvplot(fit, data = df)
+```
+
+Table and Curves using log-log 
+```{r}
+fit2 = survfit(Surv(time, status) ~ 1, conf.type = "log-log")
+summary(fit2)
+```
+
+```{r}
+ggsurvplot(fit2, data = df)
+```
+
+This ensures that you don't include more than 100% survival proportion. 
+
+Table and curves using plain 
+```{r}
+fit3 = survfit(Surv(time, status) ~ 1, conf.type = "plain")
+summary(fit3)
+```
+
+```{r}
+ggsurvplot(fit3, data = df)
+```
+
+Symmetrical confidence interval with "plain" 
+
+
+By sex 
+```{r}
+fit4 = survfit(Surv(time, status) ~ sex, data = df)
+summary(fit4)
+```
+
+```{r}
+ggsurvplot(fit4, data = df)
+```
+
+Allows us to test whether males and females are truly different 
+```{r}
+survdiff(Surv(time, status) ~sex, data = df)
+```
+
+
