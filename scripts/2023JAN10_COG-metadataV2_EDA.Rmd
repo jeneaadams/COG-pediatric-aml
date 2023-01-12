@@ -1,19 +1,22 @@
 ---
-title: "COG Metadata Visualization - Dataset Version 2"
+title: "COG pediatric AML EDA - Metadata Version 2"
 author: "Jenea Adams"
-date: "NOV 2022"
+date: "Jan 10 2022"
 output:
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
   html_document:
     theme: cerulean
     toc: yes
     toc_float: yes
-  word_document:
-    toc: yes
-  pdf_document:
-    toc: yes
 ---
 
 
+
+References: 
+- https://resources.github.com/github-and-rstudio/ 
 
 ```{r}
 library(dplyr)
@@ -21,6 +24,8 @@ library(readr)
 library(tidyverse)
 # library(mmtable2)
 library(ggplot2)
+library(formatR)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 40), tidy = TRUE)
 
 ```
 
@@ -43,24 +48,90 @@ new_pat.met = read.csv("NCT01371981-D4-Dataset.csv")
 
 #Inspect the imported data
 ```{r}
-head(new_pat.met)
+# head(new_pat.met)
 
 ```
 ```{r}
-head(rna)
+# head(rna)
 ```
 
 Change the name of rna case_id --> usi 
 ```{r}
 colnames(rna)[1] = "usi"
-head(rna)
+# head(rna)
 ```
 same for wgs
 ```{r}
 colnames(wgs)[1] = "usi"
-head(wgs)
+# head(wgs)
 
 ```
+
+
+# Merge the data by USI so that the 'name' column can be used to sort the bams into a list
+
+```{r}
+rna.pat.met_mergeUSI = merge(rna, new_pat.met, by = "usi")
+```
+
+Saving as a CSV
+```{r}
+write.csv(rna.pat.met_mergeUSI, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_rna.pat.met_mergeUSI.csv", row.names = F)
+```
+
+
+# Export subsets of data for rmats postprocessing 
+
+## Risk group 
+
+```{r}
+# filter(rna.pat.met_mergeUSI, riskgrp ==10)
+lowrisk = rna.pat.met_mergeUSI %>% filter(riskgrp == 10) # --> 713 patients; mean that not all low risk patients have metadata 
+write.csv(lowrisk, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_lowrisk_bams.csv")
+
+highrisk = rna.pat.met_mergeUSI %>% filter(riskgrp == 30) #206 patients ; 2 patients did not have rnaseq data 
+write.csv(highrisk, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_highrisk_bams.csv")
+
+```
+
+## CBF-AML 
+
+
+```{r}
+# table(rna.pat.met_mergeUSI$cbf_pt)
+cbf_pos = rna.pat.met_mergeUSI %>% filter(cbf_pt == "CBF")
+write.csv(cbf_pos, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_cbf-pos_bams.csv")
+
+cbf_neg = rna.pat.met_mergeUSI %>% filter(cbf_pt == "")
+write.csv(cbf_neg, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_cbf-neg_bams.csv")
+
+```
+
+
+
+## NPM-AML
+```{r}
+table(rna.pat.met_mergeUSI$npmstat_)
+npm_pos = rna.pat.met_mergeUSI %>% filter(npmstat_ == 1)
+write.csv(npm_pos, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_npm-pos_bams.csv")
+
+npm_neg = rna.pat.met_mergeUSI %>% filter(npmstat_ == 2)
+write.csv(npm_neg, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_npm-neg_bams.csv")
+```
+
+## Leukemic burden 
+[High white blood cell count at presentation is an unfavorable prognostic factor for treatment outcome in intermediate cytogenetic risk acute myeloid leukemia](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3166101/)
+
+```{r}
+table(rna.pat.met_mergeUSI$wbc1_i)
+low.wbc = rna.pat.met_mergeUSI %>% filter(wbc1_i == 1)
+write.csv(low.wbc, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_low-wbc_bams.csv")
+
+high.wbc = rna.pat.met_mergeUSI %>% filter(wbc1_i == 2)
+write.csv(high.wbc, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelphia/COG-pediatric-AML/bam-lists/2023JAN12_high-wbc_bams.csv")
+```
+
+
 
 
 #Parse subsets and intersections of the datasets
@@ -260,7 +331,7 @@ library(survminer)
 fit_race = survfit(Surv(yrsos, osi) ~ race_cat,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_race)
+#head(summary(fit_race))
 
 ggsurvplot(fit_race, data = cavatica.aaml2,
            legend="bottom",
@@ -294,7 +365,7 @@ Black vs non-black OS survival
 fit_black.nb = survfit(Surv(yrsos, osi) ~ raceb,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_black.nb)
+#head(summary(fit_black.nb))
 
 ggsurvplot(fit_black.nb, data = cavatica.aaml2,
            legend="bottom",
@@ -318,7 +389,7 @@ summary(coxph(Surv(yrsos, osi) ~ raceb,
 fit_black.nb_efs = survfit(Surv(yrsefs, efsi) ~ raceb,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_black.nb_efs)
+#head(summary(fit_black.nb_efs))
 
 ggsurvplot(fit_black.nb_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -341,7 +412,7 @@ EFS survival race
 fit_race_efs = survfit(Surv(yrsefs, efsi) ~ race_cat,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_race_efs)
+#head(summary(fit_race_efs))
 
 ggsurvplot(fit_race_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -368,7 +439,7 @@ hist(age, breaks = 100, main = "Age at Diagnosis", col = heat.colors(50), xlim =
 fit_age = survfit(Surv(yrsos, osi) ~ agecateg_,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_age)
+#head(summary(fit_age))
 
 ggsurvplot(fit_age, data = cavatica.aaml2,
            legend="bottom",
@@ -445,7 +516,7 @@ race.risk_mosaic = mosaicplot(race.risk, xlab = "Risk Classification", ylab = "R
 fit_risk = survfit(Surv(yrsos, osi) ~ riskgrp,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_risk)
+#head(summary(fit_risk))
 
 ggsurvplot(fit_risk, data = cavatica.aaml2,
            legend="bottom",
@@ -490,7 +561,7 @@ Looking at EFS --> are there more types of events in patients across rislk group
 fit_risk_efs = survfit(Surv(yrsefs, efsi) ~ riskgrp,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-summary(fit_risk_efs)
+#head(summary(fit_risk_efs))
 
 ggsurvplot(fit_risk_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -569,7 +640,7 @@ cbf.race.table
 First, we need to create a dummy variable for CBF mutation status in the main dataframe 
 ```{r}
 cavatica.aaml2$cbf_ind = ifelse(cavatica.aaml2$cbf_pt =="CBF", 1, 0)
-head(cavatica.aaml2)
+# head(cavatica.aaml2)
 ```
 
 Now that we have an indicator variable for cbf status, we can create the survival plot against this feature 
@@ -581,7 +652,7 @@ fit_cbf = survfit(Surv(yrsos, osi) ~ cbf_ind,
                data = cavatica.aaml2)
 
 
-summary(fit_cbf)
+#head(summary(fit_cbf))
 
 ggsurvplot(fit_cbf, data = cavatica.aaml2,
            legend="bottom",
@@ -609,7 +680,7 @@ fit_cbf_efs = survfit(Surv(yrsefs, efsi) ~ cbf_ind,
                data = cavatica.aaml2)
 
 
-summary(fit_cbf_efs)
+#head(summary(fit_cbf_efs))
 
 ggsurvplot(fit_cbf_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -650,7 +721,7 @@ We may want to quantify an effect size for a single variable, or include more th
 
 The Cox regression model is a semi-parametric model that can be used to fit univariable and multivariable regression models that have survival outcomes.
 
-h(t|Xi)=h0(t)exp(β1Xi1+⋯+βpXip)
+h(t|Xi)=h0(t)exp(B1Xi1+...+BpXip)
 
 h(t): hazard, or the instantaneous rate at which events occur h0(t): underlying baseline hazard
 
@@ -696,7 +767,7 @@ fit_cbf.only_efs = survfit(Surv(yrsefs, efsi) ~ raceb,
                data = cbf.mut.pts)
 
 
-summary(fit_cbf.only_efs)
+#head(summary(fit_cbf.only_efs))
 
 ggsurvplot(fit_cbf.only_efs, data = cbf.mut.pts,
            legend="bottom",
@@ -742,7 +813,7 @@ fit_npm_efs = survfit(Surv(yrsefs, efsi) ~ npmstat_,
                data = cavatica.aaml2)
 
 
-summary(fit_npm_efs)
+#head(summary(fit_npm_efs))
 
 ggsurvplot(fit_npm_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -776,15 +847,15 @@ This paper on the 1031 trial (https://chop365-my.sharepoint.com/personal/adamsj8
 #   else {cavatica.aaml2$npm.flt = 2}
 # }
 
-cavatica.aaml2 %>% mutate(npm.flt = case_when(
-  npmstat_ == 1 && itdlowHAR == 2 ~ 0, 
-  npmstat_ == 2 && itdlowHAR == 1 ~ 1,
-  npmstat_ == 1 && itdlowHAR == 1 ~ 2,
-  npmstat_ == 2 && itdlowHAR == 2 ~ 0,
-))
-
-
-head(cavatica.aaml2$npm.flt)
+# cavatica.aaml2 %>% mutate(npm.flt = case_when(
+#   npmstat_ == 1 && itdlowHAR == 2 ~ 0, 
+#   npmstat_ == 2 && itdlowHAR == 1 ~ 1,
+#   npmstat_ == 1 && itdlowHAR == 1 ~ 2,
+#   npmstat_ == 2 && itdlowHAR == 2 ~ 0,
+# ))
+# 
+# 
+# head(cavatica.aaml2$npm.flt)
 
 ```
 
@@ -794,8 +865,6 @@ This paper on the 1031 trial (https://chop365-my.sharepoint.com/personal/adamsj8
 
 ```{r}
 # library(vioplot)
-
-
 boxplot(data = cavatica.aaml2, log(wbc1)~npmstat_, 
         names = c("NPM +", "NPM -"))
 ```
@@ -868,11 +937,11 @@ fit_wbc_efs = survfit(Surv(yrsefs, efsi) ~ wbc1_i,
                data = cavatica.aaml2)
 
 
-summary(fit_wbc_efs)
+#head(summary(fit_wbc_efs))
 
 ggsurvplot(fit_wbc_efs, data = cavatica.aaml2,
            legend="bottom",
-           legend.labs = c("<=100,000/μL", ">100,000/μL", "Unknown"),
+           legend.labs = c("<=100,000/uL", ">100,000/uL", "Unknown"),
            ggtheme = theme_bw(),
            xlab = "Time (Years)",
            conf.int = T,
@@ -928,7 +997,7 @@ fit_gender_os = survfit(Surv(yrsos, osi) ~ gender,
                data = cavatica.aaml2)
 
 
-summary(fit_gender_os)
+#head(summary(fit_gender_os))
 
 ggsurvplot(fit_gender_os, data = cavatica.aaml2,
            legend="bottom",
@@ -957,7 +1026,7 @@ fit_trtArm_os = survfit(Surv(yrsos, osi) ~ trt_arm,
                data = cavatica.aaml2)
 
 
-summary(fit_trtArm_os)
+#head(summary(fit_trtArm_os))
 
 ggsurvplot(fit_trtArm_os, data = cavatica.aaml2,
            legend="bottom",
@@ -1072,5 +1141,5 @@ adjusted survival curves
 
 ----
 # Preparing for rMATS-turbo 
-Once exploratory data analysis is complete, Export the list of data subsets needed and group them in Cavatica for downstream analysis (move_riskgroup_bams_cavatica_args.py)
+Once exploratory data analysis is complete, Export the list of data subsets needed and group them in Cavatica for downstream analysis [sort_files_cavatica.py](https://gist.github.com/jeneaadams/a14e4ae7e5a8050cedfe6d0160e3a541)
 
