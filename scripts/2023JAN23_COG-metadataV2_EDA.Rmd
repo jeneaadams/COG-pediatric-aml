@@ -837,6 +837,14 @@ summary(coxph(Surv(yrsos, osi) ~ agecateg_,
 
 ## Risk 
 
+### Risk x RNA 
+```{r}
+rna.risk = drop_na(new_pat.met$riskgrp) %in% cavatica.aaml2
+```
+
+
+### donut plot
+
 ```{r}
 risk.table = data.frame(table(risk))
 
@@ -1341,9 +1349,19 @@ t.test(npm_neg$wbc1, npm_pos$wbc1, paired = F, var.equal = F, alternative = "gre
 
 
 ## NPM and CEBPa
-```{r}
 
+How many patients have an NPM + CEPBa mutation profile? 
+
+```{r}
+npm.cebpa = cavatica.aaml2 %>% filter(npmstat_ == 1 & cebpast_ == 1)
 ```
+
+### CEBPa 
+```{r}
+cebpa = cavatica.aaml2 %>% filter(cebpast_ == 1)
+```
+
+
 
 
 ## NPM and CBF 
@@ -1461,7 +1479,7 @@ ggsurvplot(fit_gender_os, data = cavatica.aaml2,
            ggtheme = theme_bw(),
            xlab = "Time (Years)",
            conf.int = T,
-           # palette = c("cyan3", "coral1"),
+           palette = c("cyan3", "coral1"),
            title = "OS time across Gender", subtitle = "Trial enrollment time to death or censorship")
 ```
 
@@ -1490,7 +1508,7 @@ ggsurvplot(fit_trtArm_os, data = cavatica.aaml2,
            ggtheme = theme_bw(),
            xlab = "Time (Years)",
            conf.int = T,
-           # palette = c("cyan3", "coral1"),
+           palette = c("#E69F00", "purple"),
            title = "OS time across treatment arms", subtitle = "Trial enrollment time to death or censorship")
 ```
 

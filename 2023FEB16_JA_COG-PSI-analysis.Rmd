@@ -1,0 +1,44 @@
+---
+title: "COG pediatric AML -PSI Analysis - Metadata Version 2"
+author: "Jenea Adams"
+date: "FEB 16 2023"
+output:
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+---
+ 
+
+# Packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(wesanderson)
+library(circlize)
+library(reshape)
+library(ggplot2)
+library(ComplexHeatmap)
+library(devtools)
+library(beepr)
+library(factoextra)
+library(cluster)
+library(tidyverse)
+library(broom)
+library(cowplot)
+library(plotly)
+library(ggfortify)
+```
+
+
+# Read in the data
+```{r}
+setwd("~/OneDrive - Children's Hospital of Philadelphia/gadue-lab-collab/rmats-output/2023JAN14_metadataV2/npm-aml/")
+se =read.table(file="filtered_SE.MATS.JC_PSI.txt", sep="\t", quote="", header=T, stringsAsFactors = FALSE)
+```
+
+

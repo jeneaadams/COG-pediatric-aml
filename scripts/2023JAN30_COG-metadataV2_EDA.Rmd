@@ -47,6 +47,9 @@ new_pat.met = read.csv("NCT01371981-D4-Dataset.csv")
 write.csv(new_pat.met, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/pat_metV2.csv")
 ```
 
+
+
+
 #Inspect the imported data
 ```{r}
 # head(new_pat.met)
@@ -73,6 +76,16 @@ colnames(wgs)[1] = "usi"
 
 ```{r}
 rna.pat.met_mergeUSI = merge(rna, new_pat.met, by = "usi")
+```
+
+```{r}
+# aaml.cavatica = merge(rna.pat.met_mergeUSI, wgs, by = "usi")
+```
+
+
+#CREATE WORKING FILE 
+```{r}
+# cavatica.aaml2 = rna.pat.met_mergeUSI
 ```
 
 Saving as a CSV
@@ -153,7 +166,7 @@ RNAseq and matched WGS --> 390
 length(intersect(rna$usi, wgs$usi))
 ```
 
-Same as above but using the filter function from dplyr
+Same as above but using the filter function from dplyr --> how many patients have RNA AND WGS data?
 ```{r}
 x = filter(rna, rna$usi %in% wgs$usi)
 
@@ -172,8 +185,8 @@ length(intersect(rna$usi, new_pat.met$usi))
 
 Sanity check: How many tumor WGS do we have? --> 0 
 ```{r}
-wgs.tum.pat.met = filter(wgs, wgs$usi %in% new_pat.met$usi & !wgs$sample_type == "Normal")
-nrow(wgs.tum.pat.met)
+# wgs.tum.pat.met = filter(wgs, wgs$usi %in% new_pat.met$usi & !wgs$sample_type == "Normal")
+# nrow(wgs.tum.pat.met)
 
 ```
 
@@ -222,8 +235,8 @@ nrow(row2)
 
 
 
-How many patients have metadata and EITHER WGS or RNA data? --> 1058 
--- We will use this lateer for downstream visualizations
+## How many patients have metadata and EITHER WGS OR RNA data? --> 1058 
+-- We will use this later for downstream visualizations
 ```{r}
 
 x3 = filter(new_pat.met, new_pat.met$usi %in% rna$usi | new_pat.met$usi %in% wgs$usi)
@@ -231,9 +244,17 @@ nrow(x3)
 
 ```
 
+
+DOES NOT INCLUDE BAM NAMES FOR ANY OMIC DATA
 ```{r}
 cavatica.aaml2 = x3
 ```
+
+
+```{r}
+# str(x3)
+```
+
 
 
 wgs_normal, !wgs_tumor, !rna_normal, rna_tumor, !patient metadata
@@ -550,7 +571,7 @@ nrow(x25)
 
 # Which patient subgroups overlap? 
 ```{r}
-library(ggVennDiagram)
+# library(ggVennDiagram)
 ```
 
 
@@ -573,18 +594,18 @@ usi_list = list(Race = race_binary$usi, Risk = risk$usi, NPM = npm$usi, CBF = cb
 ```
 
 ```{r}
-ggVennDiagram(usi_list)
-```
-```{r}
-ggVennDiagram(usi_list, label_alpha =  0) +
-  ggplot2::scale_fill_gradient(low="white",high = "red")
-```
-```{r}
-ggVennDiagram(usi_list, label_alpha =  0, label_percent_digit = 1, label = "percent") +
-  ggplot2::scale_fill_gradient(low="white",high = "red") + 
-  labs(title = "Common patient USIs between variables of interest",
-         subtitle = "Based on patients with Cavatica data",
-         caption = Sys.Date())
+# ggVennDiagram(usi_list)
+# ```
+# ```{r}
+# ggVennDiagram(usi_list, label_alpha =  0) +
+#   ggplot2::scale_fill_gradient(low="white",high = "red")
+# ```
+# ```{r}
+# ggVennDiagram(usi_list, label_alpha =  0, label_percent_digit = 1, label = "percent") +
+#   ggplot2::scale_fill_gradient(low="white",high = "red") + 
+#   labs(title = "Common patient USIs between variables of interest",
+#          subtitle = "Based on patients with Cavatica data",
+#          caption = Sys.Date())
 ```
 
 
@@ -837,6 +858,14 @@ summary(coxph(Surv(yrsos, osi) ~ agecateg_,
 
 ## Risk 
 
+### Risk x RNA 
+```{r}
+# rna.risk = drop_na(new_pat.met$riskgrp) %in% cavatica.aaml2
+```
+
+
+### donut plot
+
 ```{r}
 risk.table = data.frame(table(risk))
 
@@ -964,7 +993,7 @@ summary(coxph(Surv(yrsos, osi) ~ riskgrp,
 In other words, are Black patients more likely to be be in a high risk category? 
 ```{r create contigency table}
 # setwd("~/Library/CloudStorage/OneDrive\ -\ Children's\ Hospital\ of\ Philadelphia/COG-pediatric-AML/COG-pediatric-aml_github")
-setwd("~/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/COG-pediatric-AML/COG-pediatric-aml_github")
+# setwd("~/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/COG-pediatric-AML/COG-pediatric-aml_github")
 df_black_risk = read.csv("race-binary_risk.csv", header = T, row.names = 1)
 
 table(df_black_risk)
@@ -990,6 +1019,7 @@ chi
 library(corrplot)
 corrplot(chi$residuals, is.cor = F)
 ```
+
 ```{r}
 contrib <- 100*chi$residuals^2/chi$statistic
 corrplot(contrib, is.cor = F)
@@ -1341,9 +1371,19 @@ t.test(npm_neg$wbc1, npm_pos$wbc1, paired = F, var.equal = F, alternative = "gre
 
 
 ## NPM and CEBPa
-```{r}
 
+How many patients have an NPM + CEPBa mutation profile? 
+
+```{r}
+npm.cebpa = cavatica.aaml2 %>% filter(npmstat_ == 1 & cebpast_ == 1)
 ```
+
+### CEBPa 
+```{r}
+cebpa = cavatica.aaml2 %>% filter(cebpast_ == 1)
+```
+
+
 
 
 ## NPM and CBF 
@@ -1357,26 +1397,97 @@ nrow(npm.cbf)
 
 ## NPM and FLT3 low allelic ratio
 ```{r}
-npm.flt3 = cavatica.aaml2 %>% filter(npmstat_ == 1 & itdlowHAR == 1)
-nrow(npm.flt3)
+npm_flt3 = cavatica.aaml2 %>% filter(npmstat_ == 1 & itdlowHAR == 1)
+nrow(npm_flt3)
 ```
 
 ```{r}
-# cavatica.aaml2 %>%
-# if(npmstat_ == 1 & itdlowHAR == 1){ 
-#   cavatica.aaml2$npm.flt3 = 3}else{
-#     if(npmstat_ == 0 & itdlowHAR == 1){cavatica.aaml2$npm.flt3 = 2}else{
-#       if(npmstat_ == 1 & itdlowHAR == 0){cavatica.aaml2$npm.flt3 = 1}
-#     }}
 
-# cavatica.aaml2 %>% if((npmstat_ == 1) & (itdlowHAR == 1)){
-#   cavatica.aaml2$npm.flt3 = 3} else if((npmstat_ == 0)& (itdlowHAR == 1)){
-#     cavatica.aaml2$npm.flt3 = 2
-#   } else {
-#     cavatica.aaml2$npm.flt3 = 1
-#   }
+cavatica.aaml2 = cavatica.aaml2 %>%
+  mutate(npm.flt3 = case_when(npmstat_ == 1 & itdlowHAR == 2 ~ 1,
+                              npmstat_ == 2 & itdlowHAR == 1 ~ 2,
+                              npmstat_ == 1 & itdlowHAR == 1 ~ 3,
+                              npmstat_ == 2 & itdlowHAR == 2 ~ 0))
+```
+
+
+### survival by NPM + FLT3 
+```{r}
+fit_npm.flt3_1 = survfit(Surv(yrsdfs1, dfsi1) ~ npm.flt3,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+p1 = ggsurvplot(fit_npm.flt3_1, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           # palette = c("cyan3", "coral1"),
+           title = "DFS time by NPM/FLT3 mutation status", subtitle = "End of Induction I for patients who continue therapy")
+
+p1
+```
+
+
+```{r}
+fit_npm.flt3_2 = survfit(Surv(yrsefs, efsi) ~ npm.flt3,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+p2 = ggsurvplot(fit_npm.flt3_2, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           # palette = c("cyan3", "coral1"),
+           title = "EFS time by NPM/FLT3 mutation status", subtitle = "EFS from study entry")
+
+p2
+```
+
+```{r}
+# plot_grid(p1, p2,
+#           labels = c("A", "B"),
+#           ncol=2, nrow = 1)
+```
+
+
+### Years to relapse/failure by  NPM + FLT3 
+```{r}
+fit_npm.flt3_3 = survfit(Surv(yrscir, ciri) ~ npm.flt3,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+ggsurvplot(fit_npm.flt3_3, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           # palette = c("cyan3", "coral1"),
+           title = "Years to relapse/failure by NPM/FLT3 mutation status")
+```
+
+
+```{r}
+
+r2 = cavatica.aaml2 %>%
+  drop_na(yrscir, rri2) %>%
+  ggplot(aes(x = yrscir , y = ageyr, color = npm.flt3, shape = rri2, alpha = 0.1)) + geom_point(size = 2) + 
+  # scale_color_discrete(name = "Risk Group", labels =c("Low Risk", "High Risk")) +
+  scale_shape_discrete(name = "Relapse Risk after Induction II", labels =c("Censored/No Relapse", "Primary Event (relapse)", "Secondary event (death as first event)")) +
+  scale_color_discrete(name = "Mutations", labels =c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-")) + 
+  scale_size_continuous(name = "WBC") + 
+  labs(title = "Relapse risk by age", subtitle = "RR and NPM/FLT3 mutations", x = "Years to relapse/failure", y = "Age (years)" ) +
+  scale_alpha(guide = 'none') + 
+  theme_minimal()
+
+r2
 
 ```
+
 
 
 ## Leukemic Burden --> WBC groups 
@@ -1391,9 +1502,6 @@ table(cavatica.aaml2$wbc1_i)
 fit_wbc_efs = survfit(Surv(yrsefs, efsi) ~ wbc1_i,
                type = "kaplan-meier",
                data = cavatica.aaml2)
-
-
-#head(summary(fit_wbc_efs))
 
 ggsurvplot(fit_wbc_efs, data = cavatica.aaml2,
            legend="bottom",
@@ -1445,6 +1553,292 @@ ggplot(cavatica.aaml2 %>% filter(!is.na(race_str)), aes(x=race_str, y=log(wbc1))
 
 I decided to stick with the Kruskal-Wallis test because it's non-parametrics and does not assume homoscedasticity within the data. It assumes that the groups come from the same distribution. 
 
+
+## Relapse (risk) and failure
+
+```{r}
+no.relapse = cavatica.aaml2 %>% #> 451 obs 
+  filter(ciri == 0)
+
+
+relapse = cavatica.aaml2 %>%  #505 obs
+  filter(ciri == 1 | ciri == 2)
+```
+
+```{r}
+write.csv(no.relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/no-relapse.csv")
+write.csv(relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/relapse.csv")
+```
+
+```{r}
+cavatica.aaml2$relapse.i = ifelse(cavatica.aaml2$ciri == 0, 0, 1)
+tail(cavatica.aaml2$relapse.i)
+```
+
+### Relapse Risk RR 
+```{r}
+
+fit_RR_npm = survfit(Surv(yrsrr2, rri2) ~ npmstat_,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+
+#head(summary(fit_wbc_efs))
+
+ggsurvplot(fit_RR_npm, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM +", "NPM -"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           palette = c("#00AFBB", "#E7B800"),
+           # palette = c("cyan3", "coral1"),
+           title = "Years to relapse risk from end of Induction II for patients who continue on therapy", subtitle = "NPM mutation status")
+
+```
+
+
+### NPM + relapse 
+
+```{r}
+
+fit_relapse = survfit(Surv(yrscir, ciri) ~ npmstat_,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+
+#head(summary(fit_wbc_efs))
+
+ggsurvplot(fit_relapse, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM +", "NPM -"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           palette = c("#00AFBB", "#E7B800"),
+           # palette = c("cyan3", "coral1"),
+           title = "Years to relapse/failure from study entry", subtitle = "NPM mutation status")
+
+```
+
+```{r}
+survdiff(Surv(yrscir, ciri) ~ npmstat_,
+               data = cavatica.aaml2)
+```
+
+
+```{r}
+# npm.relapse = cavatica.aaml2 %>%  # 56 pts
+#   filter(ciri == 0 & npmstat_ == 1)
+# 
+# npm.no.relapse = cavatica.aaml2 %>%  #20 pts
+#   filter(ciri == 1 | ciri == 2) %>% 
+#   filter(npmstat_ ==1)
+
+npm.relapse = rna.pat.met_mergeUSI %>%
+  filter(ciri == 0 & npmstat_ == 1)
+
+npm.no.relapse = rna.pat.met_mergeUSI %>% 
+  filter(ciri == 1 | ciri == 2) %>%
+  filter(npmstat_ ==1)
+
+write.csv(npm.no.relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/npm-no-relapse.csv")
+write.csv(npm.relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/npm-relapse.csv")
+```
+
+
+
+EFS for NPM patients with and without relapse 
+
+```{r}
+# as.factor(cavatica.aaml2$npmstat_)
+
+cavatica.aaml2$npm.str = ifelse(cavatica.aaml2$npmstat_ == 1, "Positive", "Negative")
+
+cavatica.aaml2$race_cat =cavatica.aaml2$race_cat %>%
+  as.character() %>%
+  as.factor()
+
+cavatica.aaml2$riskgrp =cavatica.aaml2$riskgrp %>%
+  as.character() %>%
+  as.factor()
+
+cavatica.aaml2 %>%
+  drop_na(npmstat_) %>%
+  drop_na(mrdpct_pos) %>%
+  ggplot(aes(x = yrsefs , y = mrdpct_pos, shape = npm.str, size = wbc1, color = riskgrp, alpha = 0.2)) + geom_point() + 
+  scale_color_discrete(name = "Risk Group", labels =c("Low Risk", "High Risk")) +
+  scale_shape_discrete(name = "NPM Mutation", labels =c("Negative", "Positive")) + 
+  scale_size_continuous(name = "WBC") + 
+  labs(title = "MRD and EFS by risk, WBC, and NPM mutation status", subtitle = "N = 232", y = "MRD positive %", x = "EFS (years)" ) +
+  scale_alpha(guide = 'none')
+
+
+  # scale_fill_discrete(name = "race_cat", labels =c("AIAN", "Asian", "NHPI", "Black", "White", "Unknown")) 
+```
+
+Number of patients with MRD, npm, yrsefs, and wbc = 232
+
+```{r}
+cavatica.aaml2 %>% 
+  drop_na(mrdpct_pos, npmstat_, yrsefs, wbc1, itdlowHAR, rri2)
+
+cavatica.aaml2 %>% 
+  drop_na(mrdpct_pos)
+```
+
+### NPM + FLT3 + WBC + EFS + RISK
+
+Scatter plot but for NPM + FLT3 mutation status
+
+```{r}
+# mutate(npm.flt3 = case_when(npmstat_ == 1 & itdlowHAR == 2 ~ 1,
+#                               npmstat_ == 2 & itdlowHAR == 1 ~ 2,
+#                               npmstat_ == 1 & itdlowHAR == 1 ~ 3,
+#                               npmstat_ == 2 & itdlowHAR == 2 ~ 0)
+```
+
+
+```{r}
+
+cavatica.aaml2$npm.flt3 =cavatica.aaml2$npm.flt3 %>%
+  as.character() %>%
+  as.factor()
+
+
+cavatica.aaml2$npm.flt3 =cavatica.aaml2$npm.flt3 %>%
+  as.character() %>%
+  as.factor()
+
+cavatica.aaml2 %>%
+  drop_na(npmstat_) %>%
+  drop_na(mrdpct_pos) %>%
+  ggplot(aes(x = yrsefs , y = mrdpct_pos, shape = npm.flt3, size = wbc1, color = riskgrp, alpha = 0.2)) + geom_point() + 
+  scale_color_discrete(name = "Risk Group", labels =c("Low Risk", "High Risk")) +
+  scale_shape_discrete(name = "Mutations", labels =c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-")) + 
+  scale_size_continuous(name = "WBC") + 
+  labs(title = "MRD and EFS by risk, WBC, and mutation status", subtitle = "N = 232", y = "MRD positive %", x = "EFS (years)" ) +
+  scale_alpha(guide = 'none')
+
+```
+
+It might be more informative to improve this further and look at relapse risk? (event tho that is after induction II)
+```{r}
+cavatica.aaml2$npm.flt3 =cavatica.aaml2$npm.flt3 %>%
+  as.character() %>%
+  as.factor()
+
+
+cavatica.aaml2$rri2 =cavatica.aaml2$rri2 %>%
+  as.character() %>%
+  as.factor()
+
+r4 = cavatica.aaml2 %>%
+  drop_na(npm.flt3, npmstat_, mrdpct_pos, rri2) %>%
+  ggplot(aes(x = yrsefs , y = mrdpct_pos, size = wbc1, shape = npm.flt3, color = rri2, alpha = 0.1)) + geom_point() + 
+  scale_color_discrete(name = "Relapse Risk after Induction II", labels =c("Censored", "Primary Event (relapse)", "Secondary event (death as first event)")) +
+  scale_shape_discrete(name = "Mutations", labels =c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-")) +
+  scale_size_continuous(name = "WBC") + 
+  labs(title = "MRD and EFS by relapse risk, WBC, and mutation status", subtitle = "N = 153", y = "MRD positive %", x = "EFS (years)" ) +
+  scale_alpha(guide = 'none') + 
+  theme_minimal()
+
+r4
+```
+
+
+```{r}
+r5 = cavatica.aaml2 %>%
+  drop_na(npm.flt3, npmstat_, mrdpct_pos, rri2) %>%
+  ggplot(aes(x = yrsefs , y = mrdpct_pos, size = wbc1, shape = npm.flt3, color = rri2, alpha = 0.1)) + geom_point() + 
+  scale_color_discrete(name = "Relapse Risk after Induction II", labels =c("Censored/No Relapse", "Primary Event (relapse)", "Secondary event (death as first event)")) +
+  scale_shape_discrete(name = "Mutations", labels =c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-")) +
+  scale_size_continuous(name = "WBC") + 
+  labs(title = "MRD and EFS by relapse risk, WBC, and mutation status", subtitle = "N = 153", y = "MRD positive %", x = "EFS (years)" ) +
+  scale_alpha(guide = 'none') 
+
+r5
+```
+
+
+
+```{r}
+ggarrange(r2, r4, nrow = 2, labels = c("A", "B"))
+```
+
+
+## Treatment related mortality (TRM)
+```{r}
+fit_TRM = survfit(Surv(yrstrm_ons, trmi_ons) ~ npm.flt3,
+               type = "kaplan-meier",
+               data = cavatica.aaml2)
+
+
+#head(summary(fit_cbf))
+
+ggsurvplot(fit_TRM, data = cavatica.aaml2,
+           legend="bottom",
+           legend.labs = c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-"),
+           ggtheme = theme_bw(),
+           xlab = "Time (Years)",
+           conf.int = T,
+           # palette = c("cyan3", "coral1"),
+           title = "TRM from study entry", subtitle = "Trial enrollment time to TRM")
+```
+
+
+```{r}
+
+cavatica.aaml2$mrdstat_ =cavatica.aaml2$mrdstat_ %>%
+  as.character() %>%
+  as.factor()
+
+cavatica.aaml2$trmi_ons =cavatica.aaml2$trmi_ons %>%
+  as.character() %>%
+  as.factor()
+
+r6 = cavatica.aaml2 %>%
+  drop_na(npm.flt3, yrstrm_ons) %>%
+  ggplot(aes(x = yrstrm_ons , y = race_str, shape = mrdstat_, color = npm.flt3, alpha = 0.4)) + geom_point() + 
+  scale_shape_discrete(name = "MRD", labels =c("Positive", "Negative")) +
+  scale_color_discrete(name = "Mutations", labels =c("NPM+/FLT3-", "NPM-/FLT3+", "NPM+/FLT3+", "NPM-/FLT3-")) +
+  labs(title = "TRM", subtitle = "N = ", y = "X", x = "Years to TRM" ) +
+  scale_alpha(guide = 'none') 
+
+r6
+```
+
+
+
+```{r}
+# str(cavatica.aaml2)
+```
+
+
+How many have RNA-seq 
+```{r}
+npm_all_relapse = cavatica.aaml2 %>%
+  filter(npmstat_ == 1) %>%
+  drop_na(ciri)
+
+n1 = npm_all_relapse %>%
+  filter(npm_all_relapse$usi %in% rna$usi & (ciri == 1 | ciri == 2))
+
+nrow(n1)
+
+n2 = npm_all_relapse %>%
+  filter(npm_all_relapse$usi %in% wgs$usi & (ciri == 0)) 
+
+nrow(n2)
+
+
+n3 = npm_all_relapse %>%
+  filter(ciri == 1 | ciri == 2)
+
+nrow(n3)
+```
+
+
 ## Gender 
 
 ```{r}
@@ -1461,7 +1855,7 @@ ggsurvplot(fit_gender_os, data = cavatica.aaml2,
            ggtheme = theme_bw(),
            xlab = "Time (Years)",
            conf.int = T,
-           # palette = c("cyan3", "coral1"),
+           palette = c("cyan3", "coral1"),
            title = "OS time across Gender", subtitle = "Trial enrollment time to death or censorship")
 ```
 
@@ -1490,7 +1884,7 @@ ggsurvplot(fit_trtArm_os, data = cavatica.aaml2,
            ggtheme = theme_bw(),
            xlab = "Time (Years)",
            conf.int = T,
-           # palette = c("cyan3", "coral1"),
+           palette = c("#E69F00", "purple"),
            title = "OS time across treatment arms", subtitle = "Trial enrollment time to death or censorship")
 ```
 
