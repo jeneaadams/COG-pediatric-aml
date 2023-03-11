@@ -121,3 +121,14 @@ Involve domain experts: Involve domain experts and stakeholders throughout the m
 Perform sensitivity analysis: Perform sensitivity analysis to evaluate the robustness of the model to changes in inputs or assumptions. This will help stakeholders to understand how the model outputs might change in different scenarios.
 
 Overall, connecting real-world interpretability in your Bayesian network requires careful consideration of the needs and perspectives of domain experts and stakeholders. By making the model outputs clear, understandable, and relevant to the problem being modeled, you can ensure that the model is a useful tool for real-world decision-making.
+
+## parameter estimation 
+The parameters of a Bayesian network refer to the values of the conditional probability tables (CPTs) for each node in the network. The CPTs specify the probabilities of a node's state given the states of its parent nodes.
+
+In order to determine the parameters of your Bayesian network, you will need to learn them from data. This can be done using a process called parameter estimation or learning, which involves updating the CPTs based on observed data. There are several methods for parameter estimation in Bayesian networks, including maximum likelihood estimation (MLE), maximum a posteriori estimation (MAP), and Bayesian estimation.
+
+In MLE, the parameters are estimated by maximizing the likelihood of the observed data given the model. This involves computing the joint probability distribution of the data and the model, and finding the parameter values that maximize this distribution. In MAP estimation, a prior distribution is added to the likelihood function to encode prior knowledge or assumptions about the parameters. The parameters are then estimated by maximizing the posterior distribution given the observed data and the prior.
+
+In Bayesian estimation, a prior distribution is specified for the parameters, and this distribution is updated based on the observed data using Bayes' rule. The resulting posterior distribution is used to compute the parameter estimates.
+
+The specific method of parameter estimation you choose will depend on the nature of your data and the assumptions you are making about the model. In general, it is important to evaluate the performance of your Bayesian network on a validation set or through cross-validation to ensure that the model is not overfitting the training data, and to refine the parameter estimates as needed.
