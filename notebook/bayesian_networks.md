@@ -132,3 +132,14 @@ In MLE, the parameters are estimated by maximizing the likelihood of the observe
 In Bayesian estimation, a prior distribution is specified for the parameters, and this distribution is updated based on the observed data using Bayes' rule. The resulting posterior distribution is used to compute the parameter estimates.
 
 The specific method of parameter estimation you choose will depend on the nature of your data and the assumptions you are making about the model. In general, it is important to evaluate the performance of your Bayesian network on a validation set or through cross-validation to ensure that the model is not overfitting the training data, and to refine the parameter estimates as needed.
+
+## PCA for feature selection 
+Principal component analysis (PCA) is a dimensionality reduction technique that can be used to extract the most important features from a high-dimensional dataset. The output of PCA is a set of orthogonal principal components, which can be used as input to a Bayesian network in several ways:
+
+Use the principal components as features: The principal components can be treated as new features that capture the most important patterns in the original data. Each principal component can be treated as a separate variable in the Bayesian network, and the network structure can be learned using standard methods.
+
+Use the loadings as weights: The loadings of each variable on the principal components can be used as weights to calculate the contribution of each variable to the principal components. These weights can be used as input to the Bayesian network to capture the joint effects of the variables on the outcome.
+
+Use the principal components as input to a regression model: The principal components can be used as input to a regression model, such as linear regression or logistic regression, to predict the outcome. The output of the regression model can then be used as input to the Bayesian network to model the conditional dependencies between the variables.
+
+It's important to note that the choice of method depends on the specific research question and the characteristics of the data. In addition, the resulting Bayesian network should be validated using appropriate statistical methods to ensure that it accurately represents the underlying biological process.
