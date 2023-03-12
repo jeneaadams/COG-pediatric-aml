@@ -143,3 +143,6 @@ Use the loadings as weights: The loadings of each variable on the principal comp
 Use the principal components as input to a regression model: The principal components can be used as input to a regression model, such as linear regression or logistic regression, to predict the outcome. The output of the regression model can then be used as input to the Bayesian network to model the conditional dependencies between the variables.
 
 It's important to note that the choice of method depends on the specific research question and the characteristics of the data. In addition, the resulting Bayesian network should be validated using appropriate statistical methods to ensure that it accurately represents the underlying biological process.
+
+## networks as a directed acyclic graph 
+A Directed Acyclic Graph (DAG) is a graphical representation of a Bayesian network, which models the probabilistic relationships between variables in a system. In a Bayesian network, the joint probability distribution over all the variables in the system can be factorized into a product of conditional probabilities, each conditioned on its parents in the graph. Therefore, a common way to interpret a DAG is as a factorization of the joint probability distribution into a product of local conditional probability distributions.
