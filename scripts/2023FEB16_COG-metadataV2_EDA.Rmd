@@ -44,7 +44,7 @@ rna = read.csv("RNA.csv", header = T)
 ```{r}
 setwd("~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2")
 new_pat.met = read.csv("NCT01371981-D4-Dataset.csv")
-write.csv(new_pat.met, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/pat_metV2.csv")
+# write.csv(new_pat.met, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/pat_metV2.csv")
 ```
 
 
@@ -1554,6 +1554,7 @@ ggplot(cavatica.aaml2 %>% filter(!is.na(race_str)), aes(x=race_str, y=log(wbc1))
 I decided to stick with the Kruskal-Wallis test because it's non-parametrics and does not assume homoscedasticity within the data. It assumes that the groups come from the same distribution. 
 
 
+
 ## Relapse (risk) and failure
 
 ```{r}
@@ -1566,8 +1567,40 @@ relapse = cavatica.aaml2 %>%  #505 obs
 ```
 
 ```{r}
-write.csv(no.relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/no-relapse.csv")
-write.csv(relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/relapse.csv")
+relapse.RNA = filter(relapse, relapse$usi %in% rna$usi) %>%
+  as_tibble()
+
+write.csv(select(relapse.RNA, usi), "~/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/COG-pediatric-AML/metadata_v2/AAML1031_relapse-RNAseq.csv")
+```
+
+```{r}
+
+relapse.RNA %>% # relapse patients we have RNA seq data for 
+  summarise(total_eligible = sum(grepl("Eligible", consort_clsf)), 
+            armA = sum(grepl("Arm A", consort_clsf)), 
+            armB = sum(grepl("Arm B", consort_clsf)),
+            sct_aaml1031 = sum(grepl("1031", consort_clsf)),
+            sct_aaml05P1 = sum(grepl("05P1", consort_clsf))
+            )
+```
+
+
+
+```{r}
+505+496
+```
+
+```{r}
+relapse.indicator = rbind(relapse, no.relapse)
+
+length(unique(relapse.indicator)$usi)
+```
+
+
+
+```{r}
+# write.csv(no.relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/no-relapse.csv")
+# write.csv(relapse, "~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2/relapse.csv")
 ```
 
 ```{r}

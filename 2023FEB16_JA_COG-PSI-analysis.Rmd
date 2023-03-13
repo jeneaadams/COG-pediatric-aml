@@ -15,30 +15,411 @@ output:
  
 
 # Packages
+
 ```{r}
-library(dplyr)
-library(tidyr)
-library(wesanderson)
-library(circlize)
-library(reshape)
-library(ggplot2)
-library(ComplexHeatmap)
-library(devtools)
-library(beepr)
-library(factoextra)
-library(cluster)
-library(tidyverse)
-library(broom)
-library(cowplot)
-library(plotly)
-library(ggfortify)
+knitr::opts_chunk$set(echo = FALSE, results = "hide", fig.width=8, fig.height=6)
+options(scipen = 0, digits = 3)  # controls base R output
+# check if you have ISLR package, if not, install it
+if(!require('pacman')) {install.packages('pacman')}
+pacman::p_load(dplyr, tidyr, wesanderson, circlize, reshape, ggplot2, ComplexHeatmap, devtools, beepr, factoextra, cluster, tidyverse, broom, cowplot, plotly, ggfortify, ggpubr, rstatix, matrixTests, superheat, RColorBrewer)
 ```
 
 
 # Read in the data
 ```{r}
-setwd("~/OneDrive - Children's Hospital of Philadelphia/gadue-lab-collab/rmats-output/2023JAN14_metadataV2/npm-aml/")
-se =read.table(file="filtered_SE.MATS.JC_PSI.txt", sep="\t", quote="", header=T, stringsAsFactors = FALSE)
+setwd("~/Library/CloudStorage/OneDrive-Children'sHospitalofPhiladelphia/COG-pediatric-AML/rmats-output/2023JAN14_metadataV2/npm-aml")
+se.filtered =read.table(file="filtered_SE.MATS.JC_PSI.txt", sep="\t", quote="", header=F, stringsAsFactors = FALSE)
+
+se.up  = read.table(file="up_SE.MATS.JC_PSI.txt", sep="\t", quote="", header=F, stringsAsFactors = FALSE)
+se.dn  = read.table(file="dn_SE.MATS.JC_PSI.txt", sep="\t", quote="", header=F, stringsAsFactors = FALSE) 
 ```
 
+
+# SE Events
+```{r}
+# head(se.up, 10)
+```
+
+```{r}
+# se.up[,1]
+```
+
+## Rename columns 
+
+SE.FILTERED 
+```{r}
+colnames(se.filtered)[1] = "ID" #ID column
+colnames(se.filtered)[2:869] = paste("NPM.NEG", seq(1:868), sep ="_") #npm negatives
+colnames(se.filtered)[870:944] = paste("NPM.POS", seq(1:75), sep ="_") #npm positives
+```
+
+
+```{r}
+se.filtered_tib = se.filtered %>%
+  as_tibble()
+```
+
+
+SE.UP
+```{r}
+colnames(se.up)[1] = "ID" #ID column
+colnames(se.up)[2:869] = paste("NPM.NEG", seq(1:868), sep ="_") #npm negatives
+colnames(se.up)[870:944] = paste("NPM.POS", seq(1:75), sep ="_") #npm positives
+
+```
+
+SE.DN
+
+```{r}
+colnames(se.dn)[1] = "ID" #ID column
+colnames(se.dn)[2:869] = paste("NPM.NEG", seq(1:868), sep ="_") #npm negatives
+colnames(se.dn)[870:944] = paste("NPM.POS", seq(1:75), sep ="_") #npm positives
+```
+
+
+
+Combine se.up and se.dn to create se.sig 
+
+```{r}
+se.sig.npm = rbind(se.up, se.dn)
+
+head(se.sig.npm)
+
+```
+
+
+```{r}
+# apply(select(se.npm, -V1), 1, function(x) wilcox.test(se.npm.neg, se.npm.pos))
+```
+
+
+```{r}
+# wilcox_se.npm = apply(select(se.npm, -V1), 1, function(x) wilcox.test(se.npm.neg, se.npm.pos))
+
+# wilcox_se.npm = apply(select(se.sig.npm, -ID), 1, function(x) wilcox.test(se.npm.neg, se.npm.pos))
+
+```
+
+## melting dataframe
+
+```{r}
+se.filtered.npm_melt = melt(se.filtered) %>%
+  mutate(group = ifelse(grepl("NEG", variable), "NPM.NEG", "NPM.POS"))
+```
+
+
+
+```{r}
+se.sig.npm_melt = melt(se.sig.npm)
+```
+
+
+```{r}
+se.sig.npm_melt = se.sig.npm_melt %>%
+  mutate(group = ifelse(grepl("NEG", variable), "NPM.NEG", "NPM.POS"))
+```
+
+```{r}
+# se.sig.npm_melt %>%
+#   filter(group == "NPM.POS")
+```
+
+## subsetting dataframe
+```{r}
+npm.neg = se.filtered[, 2:869]
+npm.pos = se.filtered[, 870:944]
+```
+
+
+
+# wilcoxan test - SE 
+
+## rMATS sig
+
+### wilcox_test 
+```{r}
+se.sig.npm_melt %>%
+  wilcox_test(value ~group)
+
+```
+
+```{r}
+se.sig.npm_melt %>%
+  wilcox_test(value ~group, p.adjust.method = "fdr")
+```
+
+```{r}
+# se.sig.npm_melt %>%
+#   group_by(ID) %>%
+#   wilcox_test(value ~group, p.adjust.method = "fdr")
+```
+
+```{r}
+# se.wilcox2 = se.sig.npm_melt %>%
+#   group_by(ID) %>%
+#   wilcox_test(value ~group, p.adjust.method = "fdr")
+```
+
+
+### row_wilcoxon_twosample()
+```{r}
+# row_wilcoxon_twosample(se.sig.npm.neg, se.sig.npm.pos, exact = T, alternative = "two.sided", correct = T)
+```
+
+
+### wilcox.test 
+```{r}
+# wilcox.test(se.sig.npm.neg, se.sig.npm.pos, paiered = F, exact = F, correct = T)
+```
+
+
+
+## determining wilcox sig 
+
+### dplyr melted data 
+```{r}
+# se.filtered.npm_melt %>%
+#   group_by(ID) %>%
+#   drop_na() %>%
+#   wilcox_test(value ~ group, p.adjust.method = "fdr")
+```
+
+
+```{r}
+# se.filtered.npm_melt %>%
+#   # group_by(ID) %>%
+#   wilcox_test(value ~group, p.adjust.method = "fdr")
+```
+
+
+### rowise wilcox.test 
+
+```{r}
+# npm.neg = npm.neg %>%
+#   unlist() %>%
+#   as.numeric()
+# 
+# npm.pos = npm.pos %>%
+#   unlist() %>%
+#   as.numeric()
+```
+
+```{r}
+# mapply(function(x, y) wilcox.test(x, y)$p.value, df$md, df$og)
+
+# apply(se.filtered, 1, function(x) wilcox.test(npm.neg, npm.pos))
+```
+
+
+```{r}
+# apply(select(se.filtered, -ID), 1, function(x) wilcox.test(npm.neg, npm.pos))
+```
+
+
+## row_wilcoxon_twosample 
+```{r}
+row_wilcoxon_twosample(npm.neg, npm.pos, exact = T, alternative = "two.sided", correct = T)
+```
+
+```{r}
+# se.filtered.wilcox = row_wilcoxon_twosample(npm.neg, npm.pos, exact = T, alternative = "two.sided", correct = T)
+se.filtered.wilcox = row_wilcoxon_twosample(npm.neg, npm.pos, exact = T, alternative = "two.sided", correct = F)
+```
+
+
+```{r}
+se.filtered.wilcox.ID = cbind(select(se.filtered, ID), se.filtered.wilcox)
+```
+
+```{r}
+adjusted.ps = p.adjust(se.filtered.wilcox.ID$pvalue, method = "fdr")
+
+```
+
+```{r}
+se.filtered.wilcox.ID.padj = cbind(se.filtered.wilcox.ID, adjusted.ps)
+```
+
+
+```{r}
+se.filtered.wilcox.ID.padj.sig = se.filtered.wilcox.ID.padj %>%
+  filter(adjusted.ps < 0.001)
+```
+
+
+```{r}
+# se.npm.wilcox.sig = filter(se.filtered, se.filtered$ID %in% se.filtered.wilcox.ID.padj$ID )
+
+se.npm.wilcox.sig = se.filtered %>%
+  filter(ID %in% se.filtered.wilcox.ID.padj.sig$ID)
+  
+```
+
+
+ 
+# Normalization (row-wise) 
+
+## rmats sig 
+```{r}
+se.sig.npm %>%
+  select(-ID)
+```
+
+
+```{r}
+se.sig.npm.norm = t(apply(select(se.sig.npm, -ID), 1, function(x)(x-mean(x))/sd(x)))
+
+# se.sig.npm.norm %>%
+#   na.omit() %>%
+#   dim()
+```
+
+produces a very sparse matrix! 
+
+
+## wilcox sig 
+```{r}
+# se.npm.wilcox.sig.norm = t(apply(select(se.npm.wilcox.sig, -ID), 1, function(x)(x-mean(x))/sd(x)))
+
+se.npm.wilcox.sig.norm = t(apply(select(drop_na(se.npm.wilcox.sig), -ID), 1, function(x)(x-mean(x))/sd(x)))
+```
+
+```{r}
+se.npm.wilcox.sig_melt = melt(se.npm.wilcox.sig) %>% 
+  mutate(group = ifelse(grepl("NEG", variable), "NPM.NEG", "NPM.POS"))
+```
+
+
+
+# Plotting PSI values 
+
+## rmats sig 
+
+```{r}
+# se.sig.npm_melt %>%
+#   group_by(ID) %>%
+#   ggplot(aes(x = group, y = value, color = group)) + 
+#   geom_jitter() + 
+#   scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+#   theme_light()
+```
+
+```{r}
+# se.sig.npm_melt %>%
+#   # drop_na() %>%
+#   # group_by(ID) %>%
+#   ggplot(aes(x = group, y = value, color = group)) + 
+#   geom_boxplot() + 
+#   scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+#   labs(title = "", y = expression(paste("Raw ",psi)))
+#   theme_light()
+```
+
+```{r}
+# stat.test = se.sig.norm %>%
+#   wilcox_test(value ~ group) %>%
+#   # add_significance()
+# stat.test
+```
+
+
+```{r}
+se.sig.npm_melt %>%
+  ggplot(aes(x = group, y = value, color = group)) + 
+  geom_boxplot() + 
+  scale_color_manual(values = c("#00AFBB", "#E7B800")) + 
+  labs(title = "PSI values across NPM mutation status", subtitle = "Wilcoxon signed-rank test with FDR correction ", y = expression(paste("Raw ",psi))) +
+  stat_compare_means(p.adjust.method = "fdr", show.legend = F) +
+  theme_light() 
+
+```
+
+### violin plots 
+```{r}
+
+ggplot(drop_na(se.sig.npm_melt), aes(x= group, y=value, color = group)) + 
+  geom_violin( alpha = 0.5) + 
+  geom_boxplot(width=0.2, aes(alpha = 0.4)) +
+  coord_flip() + 
+  # stat_summary(fun.y = "mean", geom="point", size = 2) +
+  scale_color_manual(values = c("#00AFBB", "#E7B800")) + 
+  # stat_compare_means(p.adjust.method = "fdr", show.legend = F, label.x = 1.5, label.y = 0.25, aes(label=..p.adj..)) +
+  stat_compare_means(p.adjust.method = "fdr", show.legend = F, label.x = 1.5, label.y = 0.25) +
+  labs(title = "PSI distributions of all Significant SE events", subtitle ="NPM-AML", x = "Mutation status", y = expression(paste("Raw ",psi))) + 
+  guides(alpha = F) + 
+  theme_light()
+```
+
+## wilcox sig 
+```{r}
+# se.npm.wilcox.sig_melt %>% 
+#   ggplot(aes(x = group, y = value, color = group)) + 
+#   geom_jitter() + 
+#   scale_color_manual(values = c("#00AFBB", "#E7B800")) + 
+#   labs(title = "PSI values across NPM mutation status", subtitle = "Wilcoxon signed-rank test with FDR correction ", y = expression(paste("Raw ",psi))) +
+#   # stat_compare_means(p.adjust.method = "fdr", show.legend = F) +
+#   theme_light() 
+```
+
+
+# Heatmaps 
+
+## annotations
+
+https://bioconductor.riken.jp/packages/3.8/bioc/vignettes/ComplexHeatmap/inst/doc/s4.heatmap_annotation.html 
+```{r}
+# c("orangered3", "royalblue4")
+
+npm_samples = data.frame(Group = c(rep("NPM -", 868), rep("NPM +", 75)))
+# ha = HeatmapAnnotation(df = TAR_samples)
+ha = HeatmapAnnotation(df = npm_samples, col = list(Group = c("NPM -" = "orangered3", "NPM +" = "royalblue4")))
+ha
+```
+
+## SE 
+```{r}
+
+test = se.sig.npm.norm %>% as_tibble()
+```
+
+
+```{r}
+
+Heatmap(test %>%
+          # drop_na()%>%
+          select(where(is.numeric)),
+        # se.sig.npm.norm,
+        col = rev(brewer.pal(9, "RdBu")),
+        name = "Normalized PSI",
+        # name = paste("Normalized", "\u03A8"),
+        # name = expression(paste("Normalized ",psi)),
+        top_annotation = ha, 
+        column_title = "Replicates",
+        row_title = " Significant SE Events",
+        column_dend_height = unit(1.5, "cm"),
+        show_row_names = F, show_column_names = F,
+        cluster_rows = F, cluster_columns = F)
+
+```
+
+
+### wilcox sig 
+
+
+```{r}
+Heatmap(drop_na(as_tibble(se.npm.wilcox.sig.norm)) %>%
+          # drop_na()%>%
+        select(where(is.numeric)),
+        # se.sig.npm.norm,
+        col = rev(brewer.pal(9, "RdBu")),
+        name = "Normalized PSI",
+        # name = paste("Normalized", "\u03A8"),
+        # name = expression(paste("Normalized ",psi)),
+        top_annotation = ha, 
+        column_title = "Replicates",
+        row_title = " Significant SE Events - wilcox",
+        column_dend_height = unit(1.5, "cm"),
+        show_row_names = F, show_column_names = F,
+        cluster_rows = F, cluster_columns = F)
+```
 
