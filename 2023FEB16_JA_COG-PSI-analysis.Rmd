@@ -285,7 +285,17 @@ se.npm.wilcox.sig.norm = t(apply(select(drop_na(se.npm.wilcox.sig), -ID), 1, fun
 ```
 
 ```{r}
-se.npm.wilcox.sig_melt = melt(se.npm.wilcox.sig) %>% 
+se.npm.wilcox.sig_melt = melt(se.npm.wilcox.sig.norm) %>% #normalized
+  mutate(group = ifelse(grepl("NEG", variable), "NPM.NEG", "NPM.POS"))
+```
+
+```{r}
+as_tibble(se.npm.wilcox.sig.norm)
+```
+
+
+```{r}
+se.npm.wilcox.sig_melt = melt(se.npm.wilcox.sig) %>%  #un-normalized
   mutate(group = ifelse(grepl("NEG", variable), "NPM.NEG", "NPM.POS"))
 ```
 
@@ -409,6 +419,22 @@ Heatmap(test %>%
 ```{r}
 Heatmap(drop_na(as_tibble(se.npm.wilcox.sig.norm)) %>%
           # drop_na()%>%
+        select(where(is.numeric)),
+        # se.sig.npm.norm,
+        col = rev(brewer.pal(9, "RdBu")),
+        name = "Normalized PSI",
+        # name = paste("Normalized", "\u03A8"),
+        # name = expression(paste("Normalized ",psi)),
+        top_annotation = ha, 
+        column_title = "Replicates",
+        row_title = " Significant SE Events - wilcox",
+        column_dend_height = unit(1.5, "cm"),
+        show_row_names = F, show_column_names = F,
+        cluster_rows = F, cluster_columns = F)
+```
+
+```{r}
+Heatmap(as_tibble(se.npm.wilcox.sig.norm) %>%
         select(where(is.numeric)),
         # se.sig.npm.norm,
         col = rev(brewer.pal(9, "RdBu")),
