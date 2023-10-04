@@ -50,6 +50,8 @@ python ./kf-cavatica-python-tools/recipes/download_files.py --project_name {your
 
 ``` python ./kf-cavatica-python-tools/recipes/download_files.py --project_name rmats_app_dev_JA --project_path bam_files --download_location /mnt/isilon/xing_lab/aspera/adamsj/kfAML_BAMs  ```
 
+``python ./kf-cavatica-python-tools/recipes/download_files.py --project_name COG_analysis --project_path 2023OCT2_rmats-post --download_location /mnt/isilon/xing_lab/aspera/adamsj/COG_rmats_out/2023OCT2_rmats-post``
+
 # More API info
 
 * https://github.com/kids-first/kf-cavatica-python-tools
