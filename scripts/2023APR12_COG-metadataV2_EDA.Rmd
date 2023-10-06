@@ -154,19 +154,36 @@ write.csv(high.wbc, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelp
 
 
 
-#Parse subsets and intersections of the datasets
+# Parse subsets and intersections of the datasets
+
+## eligible patients 
+```{r}
+new_pat.met_eligible = new_pat.met %>%
+  filter(!grepl("02", consort_clsf))
+
+
+```
+
+eligible patients with metadata and rnaseq
+
+```{r}
+length(intersect(rna$usi, new_pat.met_eligible$usi))
+```
+
+
+
 
 RNAseq and matched WGS --> 390 
 ```{r}
 length(intersect(rna$usi, wgs$usi))
 ```
 
-Same as above but using the filter function from dplyr --> how many patients have RNA AND WGS data?
-```{r}
-x = filter(rna, rna$usi %in% wgs$usi)
+<!-- Same as above but using the filter function from dplyr --> how many patients have RNA AND WGS data? -->
+<!-- ```{r} -->
+<!-- x = filter(rna, rna$usi %in% wgs$usi) -->
 
-nrow(x)
-```
+<!-- nrow(x) -->
+<!-- ``` -->
 
 
 
@@ -210,12 +227,20 @@ wgs_tum = filter(wgs, sample_type =="Tumor")
 ```
 
 
+
 WGS normal, !WGS tumor, !RNAseq normal, RNA-seq tumor, Patient Metadata
 ```{r}
+# 
+# x2 = filter(new_pat.met, new_pat.met$usi %in% rna_tum$usi & new_pat.met$usi %in% wgs$usi & !new_pat.met$usi %in% rna_norm$usi)
+# 
+# nrow(x2)
 
-x2 = filter(new_pat.met, new_pat.met$usi %in% rna_tum$usi & new_pat.met$usi %in% wgs$usi & !new_pat.met$usi %in% rna_norm$usi)
+
+x2 = filter(new_pat.met_eligible, new_pat.met_eligible$usi %in% rna_tum$usi & new_pat.met_eligible$usi %in% wgs$usi & !new_pat.met_eligible$usi %in% rna_norm$usi)
 
 nrow(x2)
+
+
 
 ```
 It seems to be that the only intersections of RNA x WGS and Pat.Met are limited by the amount of available WGS data 
@@ -224,7 +249,7 @@ It seems to be that the only intersections of RNA x WGS and Pat.Met are limited 
 
 !wgs_normal, !wgs_tumor, !rna_normal, rna_tumor, patient metadata
 ```{r}
-row2 = filter(new_pat.met, new_pat.met$usi %in% rna_tum$usi & !new_pat.met$usi %in% wgs_norm$usi & !new_pat.met$usi %in% wgs_tum$usi & !new_pat.met$usi %in% rna_norm$usi)
+row2 = filter(new_pat.met_eligible, new_pat.met_eligible$usi %in% rna_tum$usi & !new_pat.met_eligible$usi %in% wgs_norm$usi & !new_pat.met_eligible$usi %in% wgs_tum$usi & !new_pat.met_eligible$usi %in% rna_norm$usi)
 nrow(row2)
 ```
 
@@ -254,7 +279,7 @@ cavatica.aaml2 = x3
 
 wgs_normal, !wgs_tumor, !rna_normal, rna_tumor, !patient metadata
 ```{r}
-row3 = filter(wgs, wgs$usi %in% rna_tum$usi & wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% new_pat.met$usi)
+row3 = filter(wgs, wgs$usi %in% rna_tum$usi & wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% new_pat.met_eligible$usi)
 nrow(row3)
 ```
 
@@ -264,7 +289,7 @@ How many individuals have patient metadata AND WGS normal, but nothing else?
 
 wgs_norm, !wgs_tum, !rna_norm, !rna_tum, pat met
 ```{r}
-row4 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & wgs$usi %in% new_pat.met)
+row4 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & wgs$usi %in% new_pat.met_eligible)
 nrow(row4)
 ```
 
@@ -279,7 +304,7 @@ How many patients have WGS (normal) data but NO RNA-seq or Pat.Met?
 
 wgs_norm, !wgs_tum, !rna_norm, !rna_tum, !pat met
 ```{r}
-row5 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & !wgs$usi %in% new_pat.met)
+row5 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & !wgs$usi %in% new_pat.met_eligible)
 nrow(row5)
 ```
 
@@ -289,13 +314,13 @@ RNA normal only
 !wgs_norm, !wgs_tum, rna_norm, !rna_tum, !pat met
 
 ```{r}
-row6 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & rna$usi %in% rna_norm$usi & !rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met)
+row6 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & rna$usi %in% rna_norm$usi & !rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met_eligible)
 nrow(row6)
 
 ```
 
 ```{r}
-row7 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & !rna$usi %in% rna_norm$usi & rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met)
+row7 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & !rna$usi %in% rna_norm$usi & rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met_eligible)
 nrow(row7)
 ```
 
@@ -337,6 +362,8 @@ why is this the same number as row 2 in the table? are all of these tumor data? 
 ```{r}
 table(x9$sample_type)
 ```
+
+
 
 
 

@@ -115,8 +115,6 @@ write.csv(highrisk, "/Users/adamsj8/OneDrive\ - Children's Hospital of Philadelp
 ```
 
 ## CBF-AML 
-
-
 ```{r}
 # table(rna.pat.met_mergeUSI$cbf_pt)
 cbf_pos = rna.pat.met_mergeUSI %>% filter(cbf_pt == "CBF")

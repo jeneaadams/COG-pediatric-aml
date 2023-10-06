@@ -1,0 +1,137 @@
+---
+title: "metadata_script_for_lusha"
+author: "Jenea Adams"
+date: "6/26/2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# packages 
+```{r}
+knitr::opts_chunk$set(echo = T, results = "show", fig.width=8, fig.height=6, tidy.opts=list(width.cutoff=100), tidy=TRUE)
+options(scipen = 0, digits = 3)  # controls base R output
+# check if you have ISLR package, if not, install it
+if(!require('pacman')) {install.packages('pacman')}
+pacman::p_load(dplyr, readr, tidyverse, ggplot2, formatR)
+```
+
+
+# Read in the data 
+
+```{r}
+setwd("~/OneDrive - Children's Hospital of Philadelphia/COG-pediatric-AML/metadata_v2")
+wgs = read.csv("WGS.csv", header = T) # point to path of wgs Cavatica CSV
+rna = read.csv("RNA.csv", header = T)# point to path of rna Cavatica CSV
+new_pat.met = read.csv("NCT01371981-D4-Dataset.csv") # point to path of new metadata file 
+```
+
+Change the name of rna case_id --> usi 
+```{r}
+colnames(rna)[1] = "usi"
+# head(rna)
+
+colnames(wgs)[1] = "usi" # same for wgs
+# head(wgs)
+
+```
+# subset cavatica data 
+
+## RNA
+
+N individuals with WGS (normal) x RNA-seq tumor x Pat.Met --> 390
+```{r}
+rna_norm = filter(rna, sample_type == "Normal")
+
+rna_tum = filter(rna, sample_type == "Tumor")
+
+
+
+# x2 = filter(rna_tum, rna_tum$usi %in% wgs$usi & rna_tum$usi %in% regno$usi & !rna_tum %in% rna_norm)
+
+rna.wgs = merge(rna, wgs, by="usi")
+rna_tum.wgs = merge(rna_tum, wgs, by="usi")
+```
+
+## WGS
+```{r}
+wgs_norm = filter(wgs, sample_type == "Normal")
+
+wgs_tum = filter(wgs, sample_type =="Tumor")
+```
+
+
+
+
+
+# Filter out Study Ineligible Patients 
+```{r}
+new_pat.met_eligible = new_pat.met %>%
+  filter(!grepl("02", consort_clsf))
+```
+
+
+Number of eligible patients with RNAseq data 
+```{r}
+length(intersect(rna$usi, new_pat.met_eligible$usi)) ## --> 1613
+```
+
+
+# creating table 
+
+## row 1 
+WGS normal, !WGS tumor, !RNAseq normal, RNA-seq tumor, Patient Metadata
+```{r}
+row1 = filter(new_pat.met_eligible, new_pat.met_eligible$usi %in% rna_tum$usi & new_pat.met_eligible$usi %in% wgs$usi & !new_pat.met_eligible$usi %in% rna_norm$usi)
+
+nrow(row1)
+```
+
+## row 2 
+!wgs_normal, !wgs_tumor, !rna_normal, rna_tumor, patient metadata
+```{r}
+row2 = filter(new_pat.met_eligible, new_pat.met_eligible$usi %in% rna_tum$usi & !new_pat.met_eligible$usi %in% wgs_norm$usi & !new_pat.met_eligible$usi %in% wgs_tum$usi & !new_pat.met_eligible$usi %in% rna_norm$usi)
+nrow(row2)
+```
+
+## row 3
+wgs_normal, !wgs_tumor, !rna_normal, rna_tumor, !patient metadata
+```{r}
+row3 = filter(wgs, wgs$usi %in% rna_tum$usi & wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% new_pat.met_eligible$usi)
+nrow(row3)
+```
+
+## row 4 
+wgs_norm, !wgs_tum, !rna_norm, !rna_tum, pat met
+```{r}
+row4 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & wgs$usi %in% new_pat.met_eligible)
+nrow(row4)
+```
+
+## row 5 
+wgs_norm, !wgs_tum, !rna_norm, !rna_tum, !pat met
+```{r}
+row5 = filter(wgs, wgs$usi %in% wgs_norm$usi & !wgs$usi %in% wgs_tum$usi & !wgs$usi %in% rna_norm$usi & !wgs$usi %in% rna_tum$usi & !wgs$usi %in% new_pat.met_eligible)
+nrow(row5)
+```
+
+## row 6 
+!wgs_norm, !wgs_tum, rna_norm, !rna_tum, !pat met
+
+```{r}
+row6 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & rna$usi %in% rna_norm$usi & !rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met_eligible)
+nrow(row6)
+
+```
+
+## row 7
+
+```{r}
+row7 = filter(rna, !rna$usi %in% wgs_norm$usi & !rna$usi %in% wgs_tum$usi & !rna$usi %in% rna_norm$usi & rna$usi %in% rna_tum$usi & !rna$usi %in% new_pat.met_eligible)
+nrow(row7)
+```
+
+
+
+
+
