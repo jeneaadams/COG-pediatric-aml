@@ -45,4 +45,6 @@ python _3_prepare_stats_input.py --new-output-dir /home/adamsj8/aspera/adamsj/20
 ```
 
 ## 4. Run rMATS stats model to calculate delta PSIs from groups of replicates 
+🌐m``conda activate rmats_new``
+
 Submit a job to run the stats model task with rmats on the previous oputput directory: ``sbatch --time=3-0:0:0 -J stat_npm--mem=64G _4_run-task-stat_2023OCT_COG.sh``
