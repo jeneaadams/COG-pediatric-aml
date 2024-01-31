@@ -4,8 +4,8 @@ I am re-running rmats-turbo with stats off, them collectively with the stats mod
 *The updated objective is to run the NPM rMATS samples with novelSS so that SPARKS can be appropriately run*
 
 # Steps
-- [ ] Run rmats prep on Cavatica ``--novelSS``
-- [ ] Run rmats post on Cavatica ``--novelSS``
+- [ ] Run rmats prep on Cavatica ``--novelSS``; this should be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
+- [ ] Run rmats post on Cavatica ``--novelSS``; this should (also) be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
 - [ ] Download the post output to ``/mnt/isilon/xing_lab/aspera/adamsj/2023OCT_COG_rmats_out/2023OCT2_rmats-post/2023OCT2_rmats-post/``
 - [ ] ~~Run rMATS ``task --stat`` on the output~~ [NOT SURE IF THIS IS NEEDED?\
   - [ ] move raw.inpu.*.txt and fromGTF*.txt files to the output directory of the stats step ``cp *.raw.input*.txt /mnt/isilon/xing_lab/aspera/adamsj/COG_rmats_out/2023OCT4_stat-output_full/`` 
