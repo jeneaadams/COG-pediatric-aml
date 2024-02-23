@@ -4,17 +4,17 @@ I am re-running rmats-turbo with stats off, them collectively with the stats mod
 *The updated objective is to run the NPM rMATS samples with novelSS so that SPARKS can be appropriately run*
 
 # Steps
-- [ ] Run rmats prep on Cavatica ``--novelSS``; this should be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
-- [ ] Run rmats post on Cavatica ``--novelSS``; this should (also) be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
-- [ ] Download the post output to ``/mnt/isilon/xing_lab/aspera/adamsj/2023OCT_COG_rmats_out/2023OCT2_rmats-post/2023OCT2_rmats-post/``
+- [X] Run rmats prep on Cavatica ``--novelSS``; this should be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
+- [X] Run rmats post on Cavatica ``--novelSS``; this should (also) be run with the fulldataset in b1 to get a consistent definition of alternative splicing 
+- [X] Download the post output to ``/mnt/isilon/xing_lab/aspera/adamsj/2023OCT_COG_rmats_out/2023OCT2_rmats-post/2023OCT2_rmats-post/``
 - [ ] ~~Run rMATS ``task --stat`` on the output~~ [NOT SURE IF THIS IS NEEDED?\
   - [ ] move raw.inpu.*.txt and fromGTF*.txt files to the output directory of the stats step ``cp *.raw.input*.txt /mnt/isilon/xing_lab/aspera/adamsj/COG_rmats_out/2023OCT4_stat-output_full/`` 
   - [ ] ~~``sbatch --time=3-0:0:0 --mem=32G /mnt/isilon/xing_lab/aspera/adamsj/COG_rmats_out/scripts/_4_run-task-stat_COG.sh``~~
-- [ ] For next comparison (NPM mutation status) extract bam files and run stats + filtering
+- [ ] For the next comparison (NPM mutation status) extract bam files and run stats + filtering
   - [ ] 
 - [ ] ~~compare significant splicing event counts between old and new approach~~
 - [ ] Move forward with NPM analysis 
-  - [ ] run [SPARKS](https://github.com/Xinglab/sparks) to look at RBPs involved with signififanct splicing events
+  - [ ] run [SPARKS](https://github.com/Xinglab/sparks) to look at RBPs involved with significant splicing events
   - [ ] Gene expression analysis
   - [ ] 
 
