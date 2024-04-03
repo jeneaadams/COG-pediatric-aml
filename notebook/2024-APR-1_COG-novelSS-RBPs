@@ -18,7 +18,7 @@ I am re-running rmats-turbo with stats off, them collectively with the stats mod
   - [ ] Gene expression analysis
      
 
-Commnd to download the rMATS output to Cavatica: ``python ./kf-cavatica-python-tools/recipes/download_files.py --project_name 2024_COG_analysis --project_path post-output --download_location /mnt/isilon/xing_lab/aspera/adamsj/kf_AML_kallisto_output``
+Commnd to download the rMATS output to Cavatica: ``python ./kf-cavatica-python-tools/recipes/download_files.py --project_name 2024_COG_analysis --project_path post-output --download_location /mnt/isilon/xing_lab/aspera/adamsj/2024JAN31_COG_NPM_rmats/2024MAR_full-dataset-rmats-out/``
 
 
 # Workflow (focusing on NPM only for now) 
